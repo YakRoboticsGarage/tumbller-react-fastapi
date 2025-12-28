@@ -1,28 +1,29 @@
-# [Project Name] - Development Guide
+# Tumbller Robot Control API - Development Guide
 
-**Version**: 0.1.0
-**Last Updated**: [Date]
+**Version**: 1.0.1
+**Last Updated**: December 28, 2024
 
 ---
 
 ## Quick Links
 
-- **Getting Started**: See [docs/dev/quick-start.md](docs/dev/quick-start.md)
-- **Architecture**: See [docs/dev/architecture.md](docs/dev/architecture.md)
-- **Problems & Solutions**: See [docs/agent-history/problems-solved.md](docs/agent-history/problems-solved.md)
-- **API Reference**: See [docs/API_Reference.md](docs/API_Reference.md)
-- **Debugging**: See [docs/dev/debugging.md](docs/dev/debugging.md)
-- **Prompts Library**: See [docs/agent-history/prompts.md](docs/agent-history/prompts.md)
+- **Problems & Solutions**: See [agent-history/problems-solved.md](agent-history/problems-solved.md)
+- **Session Context**: See [agent-history/session-context.md](agent-history/session-context.md)
+- **Prompts Library**: See [agent-history/prompts.md](agent-history/prompts.md)
 
 ---
 
 ## What Is This Project?
 
-[Brief description of what this FastAPI backend does]
+FastAPI backend for Tumbller robot control with x402 payment integration.
 
-- **Purpose**: [Main goal of the API]
-- **Key Features**: [List 3-5 main features]
-- **Integrations**: [External services, databases, etc.]
+- **Purpose**: Time-based robot access with optional cryptocurrency payments
+- **Key Features**:
+  - Session management for robot access control
+  - x402 payment protocol integration (USDC on Base Sepolia)
+  - Robot proxy for motor commands and camera streaming
+  - Wallet-based authentication via headers
+- **Integrations**: x402 facilitator, ESP32 robots, React frontend
 
 ---
 
@@ -30,11 +31,10 @@
 
 ```
 Python 3.11+
-FastAPI 0.100+
-SQLAlchemy 2.0 (async)
-Alembic (migrations)
+FastAPI
 Pydantic v2 (validation)
-PostgreSQL (database)
+x402 (payment protocol)
+httpx (async HTTP client)
 uv (package manager)
 pytest (testing)
 ```
@@ -43,19 +43,16 @@ pytest (testing)
 
 ## Project Status
 
-🚧 **Current Version**: 0.1.0
+✅ **v1.0.1 Complete** (December 28, 2024)
+- Fixed x402 middleware CORS issues
+- Added CORS headers to 402 responses
+- Fixed OPTIONS preflight handling for x402 routes
 
-**Completed**:
-- [ ] Project scaffolding
-- [ ] Database setup
-- [ ] Authentication
-- [ ] Core endpoints
-
-**In Progress**:
-- [ ] [Current feature]
-
-**Planned**:
-- [ ] [Future feature]
+✅ **v1.0.0 Complete** (December 28, 2024)
+- Session management (create, check, expire)
+- x402 payment integration with Coinbase facilitator
+- Robot proxy endpoints (motor commands, camera frames)
+- Robot status checking (motor and camera health)
 
 ---
 

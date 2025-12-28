@@ -1,0 +1,34 @@
+# Caddyfile for Tumbller Robot Control Web App
+#
+# This configuration serves the React app and handles:
+# - Static file serving from dist/
+# - SPA routing (all routes go to index.html)
+# - Optional HTTPS with automatic certificates
+# - Gzip compression for better performance
+
+# Option 1: Local network only (HTTP)
+# Listen on all interfaces (IPv4 and IPv6)
+http://:8080 {
+	root * /home/anurajen/source/ghub/tumbller-react-webapp/dist
+	encode gzip
+	try_files {path} /index.html
+	file_server
+}
+
+# Option 2: Public domain with automatic HTTPS
+# Uncomment and replace with your domain
+# yourdomain.com {
+#	root * /home/anurajen/source/ghub/tumbller-react-webapp/dist
+#	encode gzip
+#	try_files {path} /index.html
+#	file_server
+# }
+
+# Option 3: Specific local IP for network access
+# Replace 192.168.1.50 with your machine's IP
+# http://192.168.1.50:8080 {
+#	root * /home/anurajen/source/ghub/tumbller-react-webapp/dist
+#	encode gzip
+#	try_files {path} /index.html
+#	file_server
+# }
