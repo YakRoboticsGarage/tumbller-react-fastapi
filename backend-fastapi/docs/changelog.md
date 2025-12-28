@@ -23,6 +23,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2025-12-28
+
+### Added
+- **ENS (Ethereum Name Service) Support**:
+  - Resolve ENS names in `PAYMENT_ADDRESS` env var (e.g., "vitalik.eth")
+  - ENS resolution module (`app/core/ens.py`) with keccak256 hashing
+  - Automatic ENS name resolution for payment addresses
+  - Added `pycryptodome` dependency for cryptographic operations
+
+- **Network Configuration**:
+  - `X402_NETWORK` environment variable for testnet/mainnet switching
+  - Support for "base-sepolia" (testnet, default) and "base" (mainnet)
+  - Consistent network configuration across frontend and backend
+
+### Changed
+- **CORS Configuration**: Enhanced 402 response handling for x402 payment flow
+  - Allow `X-PAYMENT-RESPONSE` header in CORS
+  - Properly handle OPTIONS requests for payment endpoints
+  - Extract transaction hash from header for payment verification
+
+### Technical Details
+- ENS resolution uses Ethereum public resolver contract
+- Network configuration validated at startup
+- CORS allows x402-specific headers for proper payment flow
+
+---
+
+## [1.0.1] - 2025-12-28
+
+### Added
+- **Frontend Integration Support**:
+  - React 18 frontend with x402 payment integration
+  - Enhanced CORS configuration for frontend communication
+  - Payment transaction hash extraction from headers
+
+### Fixed
+- x402 CORS issues with 402 responses
+- Payment header exposure for frontend access
+
+---
+
 ## [0.1.0] - 2024-12-27
 
 ### Added
@@ -110,5 +151,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Links
 
-[Unreleased]: https://github.com/[username]/[repo]/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/[username]/[repo]/releases/tag/v0.1.0
+[Unreleased]: https://github.com/[username]/[repo]/compare/backend-fastapi-v1.1.0...HEAD
+[1.1.0]: https://github.com/[username]/[repo]/compare/backend-fastapi-v1.0.1...backend-fastapi-v1.1.0
+[1.0.1]: https://github.com/[username]/[repo]/compare/backend-fastapi-v0.1.0...backend-fastapi-v1.0.1
+[0.1.0]: https://github.com/[username]/[repo]/releases/tag/backend-fastapi-v0.1.0

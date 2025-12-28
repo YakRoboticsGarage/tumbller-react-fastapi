@@ -7,6 +7,108 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+-
+
+### Changed
+-
+
+### Fixed
+-
+
+---
+
+## [1.3.0] - 2025-12-28
+
+### Added
+- **ENS (Ethereum Name Service) Integration**:
+  - `useEns` hook for resolving wallet addresses to ENS names
+  - Display ENS names in wallet UI when available
+  - Fallback to truncated address when no ENS name exists
+  - Automatic resolution on wallet connection
+
+- **Enhanced Wallet UI**:
+  - "View Details" modal replacing inline address display
+  - Full address display with copy-to-clipboard functionality
+  - ENS name display in modal header (when available)
+  - "Wallet Connected" status text in main button
+  - Improved visual hierarchy and user experience
+
+- **Network Configuration**:
+  - `VITE_X402_NETWORK` environment variable for network switching
+  - Support for "base-sepolia" (testnet, default) and "base" (mainnet)
+  - Consistent network configuration with backend
+  - Network-aware explorer links for transaction viewing
+
+- **Multi-Wallet Support Enhancement**:
+  - Wallet provider detection system (`getPreferredProvider`)
+  - Automatic prioritization of Coinbase Wallet over MetaMask
+  - Support for `window.ethereum.providers` array
+  - Graceful fallback to default provider when only one wallet installed
+
+### Changed
+- **WalletButton Component**: Redesigned to show modal instead of inline address
+  - "View Details" button opens modal with full wallet information
+  - Cleaner header layout with better spacing
+  - Modal includes ENS name, full address, and copy functionality
+
+- **Robot Management UI**:
+  - Robot IPs hidden by default with "Show Details" toggle
+  - Robot dropdown shows only robot name (no IP display)
+  - Add Robot button moved to left alignment
+  - Improved visual hierarchy and reduced clutter
+
+- **Session Management**:
+  - Explorer links now use configured network from `VITE_X402_NETWORK`
+  - Transaction links properly route to testnet or mainnet explorer
+
+### Technical Details
+- ENS resolution uses Ethereum public resolver contract
+- Wallet provider selection handles multi-wallet browser extensions
+- Network configuration validated at app initialization
+- Copy functionality uses Clipboard API with toast feedback
+
+---
+
+## [1.2.1] - 2025-12-28
+
+### Added
+- **x402 Payment Integration**:
+  - Complete payment flow with Base Sepolia USDC
+  - Session-based access control with wallet addresses
+  - Payment configuration from backend API
+  - Transaction hash extraction from payment headers
+  - Session status monitoring and display
+
+- **Wallet Integration**:
+  - MetaMask and Coinbase Wallet support
+  - EIP-1193 provider detection
+  - Wallet connection state management
+  - Address display with truncation
+  - Network switching to Base Sepolia
+
+- **Session Management**:
+  - `SessionProvider` with React Context
+  - `useSession` hook for access control
+  - Session status polling (active/expired)
+  - Automatic session refresh on wallet connection
+  - Session expiry countdown display
+
+### Changed
+- **Robot Control**: Now requires active payment session
+- **Camera Stream**: Proxied through backend with session validation
+- **Motor Controls**: Session-aware with automatic disable on expiry
+
+### Technical Details
+- Payment client uses x402 protocol
+- USDC token address: Base Sepolia testnet
+- Session duration: 1 hour (configurable)
+- Backend proxy for robot communication
+
+---
+
 ## [1.0.0] - 2024-12-26
 
 ### Added - Core Features
@@ -761,6 +863,15 @@ When adding new features or fixing bugs:
 - Polling interval increased to 2 seconds
 - Default timeout reduced to 3 seconds
 ```
+
+---
+
+## Links
+
+[Unreleased]: https://github.com/[username]/[repo]/compare/frontend-react-v1.3.0...HEAD
+[1.3.0]: https://github.com/[username]/[repo]/compare/frontend-react-v1.2.1...frontend-react-v1.3.0
+[1.2.1]: https://github.com/[username]/[repo]/compare/frontend-react-v1.0.0...frontend-react-v1.2.1
+[1.0.0]: https://github.com/[username]/[repo]/releases/tag/frontend-react-v1.0.0
 
 ---
 
