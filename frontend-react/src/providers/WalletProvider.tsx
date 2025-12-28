@@ -27,14 +27,47 @@ export function useWalletContext() {
   return context;
 }
 
+interface EthereumProvider {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  on: (event: string, callback: (...args: unknown[]) => void) => void;
+  removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
+  isCoinbaseWallet?: boolean;
+  isMetaMask?: boolean;
+  providers?: EthereumProvider[];
+}
+
 declare global {
   interface Window {
-    ethereum?: {
-      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-      on: (event: string, callback: (...args: unknown[]) => void) => void;
-      removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
-    };
+    ethereum?: EthereumProvider;
   }
+}
+
+/**
+ * Get the preferred wallet provider.
+ * Priority: Coinbase Wallet > MetaMask > Default
+ */
+function getPreferredProvider(): EthereumProvider | undefined {
+  if (!window.ethereum) return undefined;
+
+  // If multiple providers exist (e.g., both MetaMask and Coinbase installed)
+  // window.ethereum.providers contains the array of all providers
+  const providers = window.ethereum.providers;
+
+  if (providers && providers.length > 0) {
+    // Find Coinbase Wallet first
+    const coinbaseProvider = providers.find((p) => p.isCoinbaseWallet);
+    if (coinbaseProvider) return coinbaseProvider;
+
+    // Fall back to MetaMask
+    const metaMaskProvider = providers.find((p) => p.isMetaMask);
+    if (metaMaskProvider) return metaMaskProvider;
+  }
+
+  // Single provider or Coinbase Wallet is already the default
+  if (window.ethereum.isCoinbaseWallet) return window.ethereum;
+
+  // Default to whatever is available
+  return window.ethereum;
 }
 
 interface WalletProviderProps {
@@ -50,10 +83,11 @@ export function WalletProvider({ children }: WalletProviderProps) {
   const [provider, setProvider] = useState<BrowserProvider | null>(null);
 
   const switchChain = useCallback(async (chainId: number) => {
-    if (!window.ethereum) return;
+    const ethereumProvider = getPreferredProvider();
+    if (!ethereumProvider) return;
 
     try {
-      await window.ethereum.request({
+      await ethereumProvider.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: `0x${chainId.toString(16)}` }],
       });
@@ -63,7 +97,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
       if (err.code === 4902) {
         // Chain not added, add it
         const chain = DEFAULT_CHAIN;
-        await window.ethereum.request({
+        await ethereumProvider.request({
           method: 'wallet_addEthereumChain',
           params: [
             {
@@ -80,11 +114,13 @@ export function WalletProvider({ children }: WalletProviderProps) {
   }, []);
 
   const connect = useCallback(async () => {
-    if (!window.ethereum) {
+    const ethereumProvider = getPreferredProvider();
+    if (!ethereumProvider) {
       throw new Error('No wallet found. Install Coinbase Wallet or MetaMask.');
     }
 
-    const browserProvider = new BrowserProvider(window.ethereum);
+    // Use the preferred provider (Coinbase Wallet prioritized)
+    const browserProvider = new BrowserProvider(ethereumProvider);
     const accounts = (await browserProvider.send(
       'eth_requestAccounts',
       []
@@ -116,7 +152,8 @@ export function WalletProvider({ children }: WalletProviderProps) {
 
   // Listen for wallet events
   useEffect(() => {
-    if (!window.ethereum) return;
+    const ethereumProvider = getPreferredProvider();
+    if (!ethereumProvider) return;
 
     const handleAccountsChanged = (accounts: unknown) => {
       const accts = accounts as string[];
@@ -134,12 +171,12 @@ export function WalletProvider({ children }: WalletProviderProps) {
       }));
     };
 
-    window.ethereum.on('accountsChanged', handleAccountsChanged);
-    window.ethereum.on('chainChanged', handleChainChanged);
+    ethereumProvider.on('accountsChanged', handleAccountsChanged);
+    ethereumProvider.on('chainChanged', handleChainChanged);
 
     return () => {
-      window.ethereum?.removeListener('accountsChanged', handleAccountsChanged);
-      window.ethereum?.removeListener('chainChanged', handleChainChanged);
+      ethereumProvider.removeListener('accountsChanged', handleAccountsChanged);
+      ethereumProvider.removeListener('chainChanged', handleChainChanged);
     };
   }, [disconnect]);
 
