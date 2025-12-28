@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Box,
   Container,
@@ -17,9 +18,10 @@ import {
   ModalBody,
   ModalCloseButton,
   Divider,
-  Spacer,
+  Collapse,
+  IconButton,
 } from '@chakra-ui/react'
-import { AddIcon } from '@chakra-ui/icons'
+import { AddIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons'
 import { useEffect } from 'react'
 import { AddRobotForm } from '../components/features/AddRobotForm'
 import { CameraStream } from '../components/features/CameraStream'
@@ -37,6 +39,7 @@ import { useWallet } from '../hooks/useWallet'
 
 export function RobotControlPage() {
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const [showRobotDetails, setShowRobotDetails] = useState(false)
   const robots = useRobotStore((state) => state.robots)
   const activeRobotId = useRobotStore((state) => state.activeRobotId)
   const setActiveRobot = useRobotStore((state) => state.setActiveRobot)
@@ -80,13 +83,6 @@ export function RobotControlPage() {
             </HStack>
           </HStack>
           <HStack spacing={2} flexWrap="wrap" justify="flex-start">
-            {isAuthEnabled && (
-              <>
-                <UserProfile />
-                <LogoutButton />
-              </>
-            )}
-            <Spacer display={{ base: "none", md: "block" }} />
             <Button
               leftIcon={<AddIcon />}
               colorScheme="brand"
@@ -96,6 +92,12 @@ export function RobotControlPage() {
             >
               Add Robot
             </Button>
+            {isAuthEnabled && (
+              <>
+                <UserProfile />
+                <LogoutButton />
+              </>
+            )}
           </HStack>
         </VStack>
 
@@ -129,7 +131,7 @@ export function RobotControlPage() {
                     >
                       {robotList.map((robot) => (
                         <option key={robot.config.id} value={robot.config.id}>
-                          {robot.config.name} ({robot.config.motorIp})
+                          {robot.config.name}
                         </option>
                       ))}
                     </Select>
@@ -154,24 +156,40 @@ export function RobotControlPage() {
                 <CardBody>
                   <VStack spacing={6} align="stretch">
                     <Box>
-                      <Heading size={{ base: "sm", md: "md" }} mb={4}>
-                        {activeRobot.config.name}
-                      </Heading>
-                      <VStack
-                        spacing={2}
-                        align="flex-start"
-                        fontSize={{ base: "xs", md: "sm" }}
-                        color="brown.600"
-                      >
-                        <Text>
-                          Motor: {activeRobot.config.motorIp}
-                          {activeRobot.config.motorMdns && ` (${activeRobot.config.motorMdns}.local)`}
-                        </Text>
-                        <Text>
-                          Camera: {activeRobot.config.cameraIp}
-                          {activeRobot.config.cameraMdns && ` (${activeRobot.config.cameraMdns}.local)`}
-                        </Text>
-                      </VStack>
+                      <HStack justify="space-between" align="center">
+                        <Heading size={{ base: "sm", md: "md" }}>
+                          {activeRobot.config.name}
+                        </Heading>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          rightIcon={showRobotDetails ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                          onClick={() => setShowRobotDetails(!showRobotDetails)}
+                        >
+                          {showRobotDetails ? 'Hide Details' : 'Show Details'}
+                        </Button>
+                      </HStack>
+                      <Collapse in={showRobotDetails} animateOpacity>
+                        <VStack
+                          spacing={2}
+                          align="flex-start"
+                          fontSize={{ base: "xs", md: "sm" }}
+                          color="brown.600"
+                          mt={4}
+                          p={3}
+                          bg="gray.50"
+                          borderRadius="md"
+                        >
+                          <Text>
+                            Motor: {activeRobot.config.motorIp}
+                            {activeRobot.config.motorMdns && ` (${activeRobot.config.motorMdns}.local)`}
+                          </Text>
+                          <Text>
+                            Camera: {activeRobot.config.cameraIp}
+                            {activeRobot.config.cameraMdns && ` (${activeRobot.config.cameraMdns}.local)`}
+                          </Text>
+                        </VStack>
+                      </Collapse>
                     </Box>
 
                     <Divider />

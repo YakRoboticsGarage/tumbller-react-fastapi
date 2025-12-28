@@ -1,14 +1,15 @@
 import { Box, HStack, Text, Badge, Progress, Link } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import { useSession, formatTime } from '../../hooks/useSession';
+import { DEFAULT_CHAIN } from '../../config/chains';
 
 export function SessionStatus() {
   const { hasActiveSession, sessionRobotHost, remainingSeconds, initialSeconds, isLoading, paymentTx } =
     useSession();
 
-  // Generate Base Sepolia explorer link for transaction
+  // Generate explorer link for transaction based on configured network
   const getTxExplorerUrl = (txHash: string) => {
-    return `https://sepolia.basescan.org/tx/${txHash}`;
+    return `${DEFAULT_CHAIN.blockExplorer}/tx/${txHash}`;
   };
 
   if (isLoading) {

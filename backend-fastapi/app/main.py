@@ -27,7 +27,10 @@ def create_app() -> FastAPI:
     )
 
     # x402 Payment Middleware - only when enabled and address configured
-    if settings.payment_enabled and settings.payment_address:
+    # Resolve ENS name to address if needed
+    payment_address = settings.get_payment_address() if settings.payment_enabled else ""
+
+    if settings.payment_enabled and payment_address:
         try:
             from x402.fastapi.middleware import require_payment
             from starlette.requests import Request
@@ -37,7 +40,7 @@ def create_app() -> FastAPI:
             x402_middleware = require_payment(
                 path="/api/v1/access/purchase",
                 price=settings.session_price,
-                pay_to_address=settings.payment_address,
+                pay_to_address=payment_address,
                 network=settings.x402_network,
             )
 
