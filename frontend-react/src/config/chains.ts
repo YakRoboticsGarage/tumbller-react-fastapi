@@ -31,6 +31,9 @@ export const CHAINS = {
   },
 } as const satisfies Record<string, ChainConfig>;
 
-export const DEFAULT_CHAIN: ChainConfig = import.meta.env.PROD
-  ? CHAINS.baseMainnet
-  : CHAINS.baseSepolia;
+// Network is configured via VITE_X402_NETWORK env var
+// Options: "base-sepolia" (testnet) or "base" (mainnet)
+const networkEnv = import.meta.env.VITE_X402_NETWORK || 'base-sepolia';
+
+export const DEFAULT_CHAIN: ChainConfig =
+  networkEnv === 'base' ? CHAINS.baseMainnet : CHAINS.baseSepolia;

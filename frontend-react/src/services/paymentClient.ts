@@ -9,6 +9,7 @@ import { ExactEvmSchemeV1 } from '@x402/evm/v1';
 import type { PurchaseResult, SessionStatus } from './accessApi';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const X402_NETWORK = import.meta.env.VITE_X402_NETWORK || 'base-sepolia';
 
 /**
  * Adapter to convert ethers.js Signer to x402 ClientEvmSigner
@@ -69,9 +70,10 @@ export async function purchaseAccessWithPayment(
     const x402Signer = createX402Signer(signer, walletAddress);
     console.log('[x402] Created x402 signer for address:', walletAddress);
 
-    // Create x402 client with EVM V1 scheme (base-sepolia uses V1 network names)
+    // Create x402 client with EVM V1 scheme
+    // Network is configured via VITE_X402_NETWORK env var ("base-sepolia" or "base")
     const client = new x402Client().registerV1(
-      'base-sepolia',
+      X402_NETWORK,
       new ExactEvmSchemeV1(x402Signer)
     );
 
