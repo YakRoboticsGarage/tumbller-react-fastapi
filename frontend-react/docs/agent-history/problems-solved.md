@@ -10,6 +10,7 @@
 - [State Management](#state-management)
 - [React Hooks & Context](#react-hooks--context)
 - [Wallet & Payment Integration](#wallet--payment-integration)
+- [Privy Wallet Integration](#privy-wallet-integration)
 - [UI & Component Rendering](#ui--component-rendering)
 - [API & Backend Communication](#api--backend-communication)
 - [Performance](#performance)
@@ -235,6 +236,122 @@ const refreshSession = useCallback(async (showLoading?: boolean) => {
 - Set related state values atomically
 
 **Related Files**: `src/providers/WalletProvider.tsx`, `src/providers/SessionProvider.tsx`
+
+---
+
+## Privy Wallet Integration
+
+### Blank Page After Schema Migration
+
+**Date**: 2025-12-29
+
+**Symptoms**:
+Page shows blank/crashes after deploying schema changes that added `walletAddress` and `walletSource` fields to robots.
+
+**Root Cause**:
+Zustand persist middleware loaded old localStorage data that was missing the new required fields. Components tried to render with undefined values.
+
+**Solution**:
+Filter out invalid robots in the persist merge function:
+
+```typescript
+// src/stores/robotStore.ts
+persist(
+  (set, get) => ({ ... }),
+  {
+    name: 'robot-storage',
+    merge: (persistedState, currentState) => {
+      const persisted = persistedState as PersistedState;
+
+      // Filter out robots without required wallet fields
+      const validRobots = (persisted.robots || []).filter(
+        ([, robot]) => robot.walletAddress && robot.walletSource
+      );
+
+      const robots = new Map(
+        validRobots.map(([id, robot]) => [
+          id,
+          { ...robot, connectionStatus: 'disconnected' as const }
+        ])
+      );
+
+      return { ...currentState, robots };
+    },
+  }
+)
+```
+
+**Prevention**:
+- Always validate persisted state has required fields
+- Filter or migrate invalid entries instead of crashing
+- Consider versioning persisted state schema
+
+**Related Files**: `src/stores/robotStore.ts`
+
+---
+
+### ETH Transaction Not Waiting for Confirmation
+
+**Date**: 2025-12-29
+
+**Symptoms**:
+Gas funding modal showed success immediately but transaction wasn't confirmed on-chain.
+
+**Root Cause**:
+Missing `await tx.wait()` after `sendTransaction()`.
+
+**Solution**:
+```typescript
+const handleFund = async () => {
+  const signer = await getSigner();
+  const tx = await signer.sendTransaction({
+    to: privyWalletAddress,
+    value: parseEther(ethAmount),
+  });
+
+  // Wait for transaction to be mined
+  await tx.wait();
+
+  // Now safe to show success
+  onFundingComplete();
+};
+```
+
+**Prevention**:
+- Always `await tx.wait()` for blockchain transactions
+- Show "pending" state between send and confirmation
+- Consider showing tx hash immediately for user to track
+
+**Related Files**: `src/components/features/FundPrivyWalletModal.tsx`
+
+---
+
+### USDC Amount Display Wrong Decimals
+
+**Date**: 2025-12-29
+
+**Symptoms**:
+USDC balance showed very large numbers or wrong values.
+
+**Root Cause**:
+USDC has 6 decimals, not 18 like ETH. Raw balance needs to be divided by 1e6.
+
+**Solution**:
+```typescript
+// Format USDC smallest units to readable format
+function formatUsdc(amount: string): string {
+  const usdc = Number(amount) / 1e6;  // USDC has 6 decimals
+  if (usdc === 0) return '$0.00';
+  return `$${usdc.toFixed(2)}`;
+}
+```
+
+**Prevention**:
+- Always check token decimals (ETH=18, USDC=6, USDT=6)
+- Backend should return both raw and formatted values
+- Document decimal handling in API types
+
+**Related Files**: `src/components/features/RobotPayoutButton.tsx`
 
 ---
 

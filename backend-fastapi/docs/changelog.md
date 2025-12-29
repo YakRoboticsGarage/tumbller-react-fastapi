@@ -9,6 +9,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+-
+
+### Changed
+-
+
+### Fixed
+-
+
+---
+
+## [1.3.0] - 2025-12-29
+
+### Added
+- **Privy Server Wallet Integration**:
+  - Complete Privy API client (`app/services/privy.py`) for server-managed wallets
+  - Create wallets via Privy API with `create_wallet()`
+  - Send ETH transactions with `send_transaction()`
+  - Send USDC (ERC20) transfers with `send_usdc()` using encoded contract calls
+  - Get ETH and USDC balances via public RPC
+
+- **Robot Wallet Management**:
+  - Dual wallet support: user-provided OR Privy-created wallets
+  - Wallet switching between wallet types without losing either
+  - Soft delete for robots (preserves wallet data)
+  - Owner wallet field for payout destinations
+
+- **New API Endpoints**:
+  - `POST /api/v1/robots` - Register robot (auto-creates Privy wallet if no address)
+  - `GET /api/v1/robots` - List all robots
+  - `GET /api/v1/robots/{id}` - Get robot details
+  - `PATCH /api/v1/robots/{id}` - Update robot
+  - `DELETE /api/v1/robots/{id}` - Soft delete robot
+  - `POST /api/v1/robots/{id}/payout` - Transfer USDC earnings to owner
+  - `POST /api/v1/robots/{id}/switch-wallet` - Switch between wallet types
+  - `GET /api/v1/robots/{id}/balance` - Get ETH and USDC balances
+  - `GET /api/v1/robots/gas-funding-info` - Get ETH price for gas funding
+
+- **Database Layer**:
+  - SQLAlchemy 2.0 async ORM with `aiosqlite`
+  - Alembic migrations setup
+  - Robot model with wallet fields
+
+- **ETH Price API**:
+  - CoinGecko integration for ETH/USD price
+  - `calculate_eth_for_usd()` for gas funding calculations
+
+### Technical Details
+- USDC transfers use ERC20 `transfer(address,uint256)` encoding
+- Privy API uses CAIP-2 format (`eip155:{chain_id}`) for chain specification
+- USDC contract addresses: Base Sepolia `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
+- Transaction hash extraction handles multiple Privy response formats
+
+---
+
+## [1.2.0] - 2025-12-29
+
 ### Changed
 - **ENS Module Simplification**: Replaced custom keccak256/JSON-RPC implementation with web3.py
   - Reduced `app/core/ens.py` from ~200 lines to ~40 lines

@@ -10,6 +10,7 @@
 - [x402 Payment Integration](#x402-payment-integration)
 - [CORS & Middleware](#cors--middleware)
 - [Database & Migrations](#database--migrations)
+- [Privy Wallet Integration](#privy-wallet-integration)
 - [Authentication & Security](#authentication--security)
 - [API & Routing](#api--routing)
 - [Async & Concurrency](#async--concurrency)
@@ -170,6 +171,171 @@ app.add_middleware(
 - [How to avoid this in the future]
 
 **Related Files**: `path/to/file.py`
+
+---
+
+## Privy Wallet Integration
+
+### Privy API USDC Transfer Returns 400 Bad Request
+
+**Date**: 2025-12-29
+
+**Symptoms**:
+```
+httpx.HTTPStatusError: Client error '400 Bad Request' for url 'https://api.privy.io/v1/wallets/{id}/rpc'
+POST /api/v1/robots/{id}/payout HTTP/1.1" 500 Internal Server Error
+Frontend shows CORS error (because 500 response lacks CORS headers)
+```
+
+**Root Cause**:
+Privy API expects chain specification using `caip2` format at the top level of the JSON request, not `chainId` inside the transaction object. The `chainId` field inside transaction params is ignored/invalid.
+
+**Solution**:
+```python
+# app/services/privy.py - send_usdc() method
+
+# ❌ Before (wrong)
+response = await client.post(
+    f"/wallets/{wallet_id}/rpc",
+    json={
+        "method": "eth_sendTransaction",
+        "params": {
+            "transaction": {
+                "to": usdc_address,
+                "data": data_hex,
+                "value": "0x0",
+                "chainId": chain_id,  # WRONG - Privy ignores this
+            }
+        },
+    },
+)
+
+# ✅ After (correct)
+response = await client.post(
+    f"/wallets/{wallet_id}/rpc",
+    json={
+        "method": "eth_sendTransaction",
+        "caip2": f"eip155:{chain_id}",  # CORRECT - at top level, CAIP-2 format
+        "params": {
+            "transaction": {
+                "to": usdc_address,
+                "data": data_hex,
+                "value": 0,  # Also use integer, not hex string
+            }
+        },
+    },
+)
+```
+
+**Prevention**:
+- Always check Privy API docs for exact request format
+- CAIP-2 format is `eip155:{chain_id}` (e.g., `eip155:84532` for Base Sepolia)
+- Test ERC20 transfers with small amounts first
+
+**Related Files**: `app/services/privy.py`
+
+---
+
+### ERC20 USDC Transfer Encoding
+
+**Date**: 2025-12-29
+
+**Symptoms**:
+```
+Need to transfer USDC (ERC20 token) from Privy wallet to owner wallet
+Direct ETH transfer works but USDC requires contract interaction
+```
+
+**Root Cause**:
+USDC is an ERC20 token requiring encoded contract calls, not simple value transfers. The `transfer(address,uint256)` function must be ABI-encoded.
+
+**Solution**:
+```python
+# app/services/privy.py
+
+async def send_usdc(
+    self,
+    wallet_id: str,
+    to_address: str,
+    amount: int,  # USDC smallest units (6 decimals)
+    chain_id: int = 84532,
+) -> str:
+    # USDC contract addresses per chain
+    usdc_contracts = {
+        84532: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",  # Base Sepolia
+        8453: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",   # Base Mainnet
+    }
+    usdc_address = usdc_contracts.get(chain_id)
+
+    # Encode ERC20 transfer(address,uint256) call
+    # Function selector: 0xa9059cbb (keccak256("transfer(address,uint256)")[:4])
+    to_padded = to_address.lower().replace("0x", "").zfill(64)  # Pad address to 32 bytes
+    amount_padded = hex(amount)[2:].zfill(64)  # Pad amount to 32 bytes
+    data_hex = f"0xa9059cbb{to_padded}{amount_padded}"
+
+    # Send to USDC contract with encoded data
+    response = await client.post(
+        f"/wallets/{wallet_id}/rpc",
+        json={
+            "method": "eth_sendTransaction",
+            "caip2": f"eip155:{chain_id}",
+            "params": {
+                "transaction": {
+                    "to": usdc_address,  # Contract address, not recipient
+                    "data": data_hex,     # Encoded transfer call
+                    "value": 0,           # No ETH value for ERC20 transfer
+                }
+            },
+        },
+    )
+```
+
+**Prevention**:
+- ERC20 transfers always go to the contract address, not the recipient
+- The recipient is encoded in the `data` field
+- Function selector `0xa9059cbb` = `transfer(address,uint256)`
+- Function selector `0x70a08231` = `balanceOf(address)` for reading balance
+
+**Related Files**: `app/services/privy.py`
+
+---
+
+### Privy API Transaction Hash Response Format
+
+**Date**: 2025-12-29
+
+**Symptoms**:
+```
+Transaction succeeds but tx_hash is empty string
+Different response structures depending on transaction type
+```
+
+**Root Cause**:
+Privy API returns transaction hash in different response fields depending on the request type and API version.
+
+**Solution**:
+```python
+# app/services/privy.py
+
+# Try multiple possible paths in the response
+tx_hash = (
+    data.get("data", {}).get("transaction_hash")
+    or data.get("data", {}).get("transactionHash")
+    or data.get("data", {}).get("hash")
+    or data.get("transaction_hash")
+    or data.get("transactionHash")
+    or data.get("hash")
+    or ""
+)
+return tx_hash
+```
+
+**Prevention**:
+- Always check multiple possible response paths for Privy API
+- Log full response during development to identify correct path
+- The nested `data.transaction_hash` pattern is common
+
+**Related Files**: `app/services/privy.py`
 
 ---
 

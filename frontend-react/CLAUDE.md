@@ -67,6 +67,12 @@ Read these before working on specific areas:
 - `docs/testing-guide.md` - Test patterns and Playwright setup
 - `docs/theme-customization.md` - Chakra theme extension guide
 
+### Agent History (AI Session Continuity)
+
+- `docs/agent-history/session-2025-12-29.md` - Current session context (Privy wallet UI)
+- `docs/agent-history/problems-solved.md` - Issues and solutions
+- `docs/agent-history/prompts.md` - AI prompts that worked
+
 ## Boundaries
 
 **Always:**

@@ -8,6 +8,7 @@
 ## Index
 
 - [API Development](#api-development)
+- [Wallet Integration](#wallet-integration)
 - [Database](#database)
 - [Testing](#testing)
 - [Debugging](#debugging)
@@ -60,6 +61,75 @@ Front end is where the robots are added with mdns names like finland-tumbller-01
 **Result**: Implemented `_sessions` and `_robot_locks` dictionaries for wallet-to-robot binding
 
 **Notes**: Gave full context about the system (frontend, mDNS, robot discovery) which helped design the right solution
+
+---
+
+## Wallet Integration
+
+### Show Wallet Balance (Worked: 2025-12-29)
+
+**Context**: Needed to display Privy wallet USDC and ETH balances in the UI
+
+**Prompt Used**:
+```
+Okay, let's use the privy to show the funds in the privy wallet beside the collect earnings button
+```
+
+**Result**:
+- Added `get_balance()` and `get_usdc_balance()` methods to privy.py
+- Created `/robots/{id}/balance` endpoint returning ETH and USDC balances
+- Frontend displays both balances as badges
+
+**Notes**:
+- USDC balance requires ERC20 `balanceOf()` call to contract, not native balance check
+- Use public RPC for balance queries (doesn't require Privy credentials)
+
+---
+
+### User-Controlled Gas Funding (Worked: 2025-12-29)
+
+**Context**: Originally wanted auto-funding of $1 ETH on wallet creation
+
+**Initial Prompt**:
+```
+Let's change the creation of privy wallet so that 1 dollar of eth is transferred on the eth base network to the privy wallet for gas fees from the login wallet
+```
+
+**User Feedback**:
+```
+Let the user decide on the amount of eth they want to fund
+```
+
+**Result**:
+- Created `get_eth_price_usd()` using CoinGecko API
+- Added `gas-funding-info` endpoint for ETH/USD conversion
+- Frontend modal with user-specified ETH amount input
+
+**Notes**:
+- Let users control amounts rather than auto-transferring
+- Show USD equivalent so users understand cost
+- CoinGecko API has rate limits - add fallback price
+
+---
+
+### USDC-Only Payout (Worked: 2025-12-29)
+
+**Context**: Transfer button was transferring ETH but should transfer only USDC earnings
+
+**Prompt Used**:
+```
+The transfer button should only transfer the USDC collected and the balance should show both usdc and eth balance
+```
+
+**Result**:
+- Changed `send_transaction()` to `send_usdc()` for ERC20 transfer
+- Updated schemas from `amount_wei` to `amount_usdc`
+- Balance display shows both USDC (green) and ETH (blue) badges
+
+**Notes**:
+- ERC20 transfers require encoding `transfer(address,uint256)` with selector `0xa9059cbb`
+- USDC has 6 decimals (not 18 like ETH)
+- Use CAIP-2 format (`eip155:{chain_id}`) for Privy API, not `chainId`
 
 ---
 
@@ -122,7 +192,34 @@ Let's modify the tests so that the default is payment enabled
 
 ## Debugging
 
-### [No debugging prompts yet]
+### Debug API Error with Backend Logs (Worked: 2025-12-29)
+
+**Context**: Frontend showed CORS error, but real issue was 500 from backend
+
+**Prompt Sequence**:
+```
+I get this error Access to fetch at 'http://localhost:8000/api/v1/robots/.../payout' from origin 'http://localhost:5173' has been blocked by CORS policy...
+```
+
+```
+the python server is running just use curl
+```
+
+```
+this is the error from the fastapi backend...
+[Full traceback with httpx.HTTPStatusError: Client error '400 Bad Request']
+```
+
+**Result**:
+- Used curl to bypass CORS and see actual error
+- Backend traceback revealed Privy API 400 error
+- Fixed by changing `chainId` to `caip2` format
+
+**Notes**:
+- CORS errors often mask the real backend error
+- Use curl to test API directly when debugging
+- Include full backend traceback - it shows the actual root cause
+- Don't assume the frontend error is the real problem
 
 ---
 

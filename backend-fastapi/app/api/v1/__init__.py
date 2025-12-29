@@ -1,3 +1,3 @@
-from app.api.v1 import access, robot
+from app.api.v1 import access, robot, robots
 
-__all__ = ["access", "robot"]
+__all__ = ["access", "robot", "robots"]

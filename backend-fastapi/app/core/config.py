@@ -12,6 +12,13 @@ class Settings(BaseSettings):
     debug: bool = False
     cors_origins: list[str] = ["http://localhost:5173"]
 
+    # Database
+    database_url: str = "sqlite+aiosqlite:///./robots.db"
+
+    # Privy API (for wallet creation)
+    privy_app_id: str = ""
+    privy_app_secret: str = ""
+
     # x402 Payments
     payment_enabled: bool = False  # Toggle to enable/disable payment gateway
     payment_address: str = ""  # Can be ENS name (e.g., "vitalik.eth") or address

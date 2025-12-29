@@ -1,6 +1,6 @@
 # Tumbller Robot Control API - Development Guide
 
-**Version**: 1.2.0
+**Version**: 1.3.0
 **Last Updated**: December 29, 2025
 
 ---
@@ -17,13 +17,16 @@
 
 FastAPI backend for Tumbller robot control with x402 payment integration.
 
-- **Purpose**: Time-based robot access with optional cryptocurrency payments
+- **Purpose**: Time-based robot access with cryptocurrency payments and Privy wallet management
 - **Key Features**:
   - Session management for robot access control
   - x402 payment protocol integration (USDC on Base Sepolia)
+  - Privy server wallet management for robots
+  - Dual wallet support (user-provided + Privy-created)
+  - USDC earnings collection and ETH gas funding
   - Robot proxy for motor commands and camera streaming
   - Wallet-based authentication via headers
-- **Integrations**: x402 facilitator, ESP32 robots, React frontend
+- **Integrations**: x402 facilitator, Privy API, ESP32 robots, React frontend
 
 ---
 
@@ -32,9 +35,13 @@ FastAPI backend for Tumbller robot control with x402 payment integration.
 ```
 Python 3.11+
 FastAPI
+SQLAlchemy 2.0 (async ORM)
+Alembic (migrations)
 Pydantic v2 (validation)
 x402 (payment protocol)
+Privy API (server wallets)
 httpx (async HTTP client)
+aiosqlite (async SQLite)
 uv (package manager)
 pytest (testing)
 ```
@@ -42,6 +49,15 @@ pytest (testing)
 ---
 
 ## Project Status
+
+✅ **v1.3.0 Complete** (December 29, 2025)
+- Complete Privy wallet integration for robots
+- Dual wallet support (user-provided + Privy-created)
+- USDC earnings collection via Privy server wallets
+- ETH gas funding info endpoint with price API
+- Wallet balance endpoint (ETH + USDC)
+- Wallet switching functionality
+- SQLAlchemy async database layer with Alembic migrations
 
 ✅ **v1.2.0 Complete** (December 29, 2025)
 - Simplified ENS module with web3.py (replaced pycryptodome)
@@ -75,7 +91,7 @@ pytest (testing)
 
 ## For Continuing Work
 
-**Previous Session Context**: [docs/agent-history/session-context.md](docs/agent-history/session-context.md)
+**Current Session Context**: [agent-history/session-2025-12-29.md](agent-history/session-2025-12-29.md)
 
 **Common Tasks**:
 - Add endpoint → [docs/dev/common-tasks.md](docs/dev/common-tasks.md)
@@ -101,7 +117,7 @@ pytest (testing)
 - `docs/dev/testing.md` - Testing guide
 
 ### Agent History (AI Session Continuity)
-- `docs/agent-history/session-context.md` - Session continuity
+- `docs/agent-history/session-2025-12-29.md` - Current session context (Privy wallet integration)
 - `docs/agent-history/problems-solved.md` - Issues and solutions
 - `docs/agent-history/prompts.md` - AI prompts that worked
 - `docs/changelog.md` - Version history

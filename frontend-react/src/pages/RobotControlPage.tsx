@@ -19,7 +19,8 @@ import {
   ModalCloseButton,
   Divider,
   Collapse,
-  IconButton,
+  Spinner,
+  useToast,
 } from '@chakra-ui/react'
 import { AddIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons'
 import { useEffect } from 'react'
@@ -27,6 +28,9 @@ import { AddRobotForm } from '../components/features/AddRobotForm'
 import { CameraStream } from '../components/features/CameraStream'
 import { MotorControls } from '../components/features/MotorControls'
 import { RobotConnection } from '../components/features/RobotConnection'
+import { RobotWalletDisplay } from '../components/features/RobotWalletDisplay'
+import { RobotPayoutButton } from '../components/features/RobotPayoutButton'
+import { FundPrivyWalletModal } from '../components/features/FundPrivyWalletModal'
 import { LogoutButton } from '../components/common/LogoutButton'
 import { UserProfile } from '../components/common/UserProfile'
 import { WalletButton } from '../components/common/WalletButton'
@@ -39,12 +43,23 @@ import { useWallet } from '../hooks/useWallet'
 
 export function RobotControlPage() {
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const {
+    isOpen: isFundingOpen,
+    onOpen: onFundingOpen,
+    onClose: onFundingClose,
+  } = useDisclosure()
   const [showRobotDetails, setShowRobotDetails] = useState(false)
+  const [showWalletInfo, setShowWalletInfo] = useState(false)
+  const [pendingPrivyWallet, setPendingPrivyWallet] = useState<string | null>(null)
+  const toast = useToast()
   const robots = useRobotStore((state) => state.robots)
   const activeRobotId = useRobotStore((state) => state.activeRobotId)
   const setActiveRobot = useRobotStore((state) => state.setActiveRobot)
   const removeRobot = useRobotStore((state) => state.removeRobot)
-  const initializeDefaultRobot = useRobotStore((state) => state.initializeDefaultRobot)
+  const syncFromBackend = useRobotStore((state) => state.syncFromBackend)
+  const updateRobotWallet = useRobotStore((state) => state.updateRobotWallet)
+  const switchWallet = useRobotStore((state) => state.switchWallet)
+  const isLoading = useRobotStore((state) => state.isLoading)
   // Get active robot directly from store to ensure reactivity
   const activeRobot = useRobotStore((state) =>
     state.activeRobotId ? state.robots.get(state.activeRobotId) : undefined
@@ -54,10 +69,10 @@ export function RobotControlPage() {
   const { hasActiveSession, isLoading: isSessionLoading } = useSession()
   const { isConnected: isWalletConnected } = useWallet()
 
-  // Initialize default robot from .env on first load
+  // Sync robots from backend on first load
   useEffect(() => {
-    initializeDefaultRobot()
-  }, [initializeDefaultRobot])
+    void syncFromBackend()
+  }, [syncFromBackend])
 
   const robotList = Array.from(robots.values())
 
@@ -67,7 +82,7 @@ export function RobotControlPage() {
 
   const handleRemoveRobot = () => {
     if (activeRobotId) {
-      removeRobot(activeRobotId)
+      void removeRobot(activeRobotId)
     }
   }
 
@@ -101,7 +116,16 @@ export function RobotControlPage() {
           </HStack>
         </VStack>
 
-        {robotList.length === 0 ? (
+        {isLoading ? (
+          <Card>
+            <CardBody>
+              <VStack spacing={4} py={8}>
+                <Spinner size="lg" color="brand.500" />
+                <Text color="gray.500">Loading robots...</Text>
+              </VStack>
+            </CardBody>
+          </Card>
+        ) : robotList.length === 0 ? (
           <Card>
             <CardBody>
               <VStack spacing={4} py={8}>
@@ -156,38 +180,170 @@ export function RobotControlPage() {
                 <CardBody>
                   <VStack spacing={6} align="stretch">
                     <Box>
-                      <HStack justify="space-between" align="center">
+                      <HStack justify="space-between" align="center" mb={2}>
                         <Heading size={{ base: "sm", md: "md" }}>
                           {activeRobot.config.name}
                         </Heading>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          rightIcon={showRobotDetails ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                          onClick={() => setShowRobotDetails(!showRobotDetails)}
-                        >
-                          {showRobotDetails ? 'Hide Details' : 'Show Details'}
-                        </Button>
+                        <HStack spacing={2}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            rightIcon={showRobotDetails ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                            onClick={() => setShowRobotDetails(!showRobotDetails)}
+                          >
+                            {showRobotDetails ? 'Hide' : 'Robot'} Details
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            colorScheme="green"
+                            rightIcon={showWalletInfo ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                            onClick={() => setShowWalletInfo(!showWalletInfo)}
+                          >
+                            {showWalletInfo ? 'Hide' : 'Wallet'} Info
+                          </Button>
+                        </HStack>
                       </HStack>
+
+                      {/* Robot Details Section */}
                       <Collapse in={showRobotDetails} animateOpacity>
                         <VStack
                           spacing={2}
                           align="flex-start"
                           fontSize={{ base: "xs", md: "sm" }}
-                          color="brown.600"
-                          mt={4}
+                          color="gray.600"
+                          mt={2}
                           p={3}
                           bg="gray.50"
                           borderRadius="md"
                         >
                           <Text>
-                            Motor: {activeRobot.config.motorIp}
+                            <Text as="span" fontWeight="medium">Motor:</Text> {activeRobot.config.motorIp}
                             {activeRobot.config.motorMdns && ` (${activeRobot.config.motorMdns}.local)`}
                           </Text>
                           <Text>
-                            Camera: {activeRobot.config.cameraIp}
+                            <Text as="span" fontWeight="medium">Camera:</Text> {activeRobot.config.cameraIp}
                             {activeRobot.config.cameraMdns && ` (${activeRobot.config.cameraMdns}.local)`}
                           </Text>
+                        </VStack>
+                      </Collapse>
+
+                      {/* Wallet Info Section */}
+                      <Collapse in={showWalletInfo} animateOpacity>
+                        <VStack
+                          spacing={3}
+                          align="flex-start"
+                          fontSize={{ base: "xs", md: "sm" }}
+                          mt={2}
+                          p={3}
+                          bg="green.50"
+                          borderRadius="md"
+                        >
+                          <RobotWalletDisplay
+                            walletAddress={activeRobot.config.walletAddress}
+                            walletSource={activeRobot.config.walletSource}
+                            robotId={activeRobot.config.id}
+                            onWalletUpdate={(newAddress) => updateRobotWallet(activeRobot.config.id, newAddress)}
+                          />
+
+                          {/* Wallet switching options */}
+                          <HStack spacing={2} width="100%" flexWrap="wrap">
+                            {activeRobot.config.walletSource === 'user_provided' ? (
+                              <Button
+                                size="xs"
+                                colorScheme="purple"
+                                variant="outline"
+                                onClick={async () => {
+                                  try {
+                                    // Switch/create the Privy wallet
+                                    await switchWallet(activeRobot.config.id, 'privy_created')
+                                    // Get the updated robot to find the new privy wallet address
+                                    const updatedRobot = useRobotStore.getState().robots.get(activeRobot.config.id)
+                                    if (updatedRobot?.config.privyWalletAddress) {
+                                      // Open funding modal
+                                      setPendingPrivyWallet(updatedRobot.config.privyWalletAddress)
+                                      onFundingOpen()
+                                    }
+                                  } catch (err) {
+                                    toast({
+                                      title: 'Failed to create Privy wallet',
+                                      description: err instanceof Error ? err.message : 'Unknown error',
+                                      status: 'error',
+                                      duration: 5000,
+                                      isClosable: true,
+                                    })
+                                  }
+                                }}
+                              >
+                                {activeRobot.config.privyWalletAddress ? 'Switch to Privy Wallet' : 'Create Privy Wallet'}
+                              </Button>
+                            ) : (
+                              <>
+                                {activeRobot.config.userWalletAddress && (
+                                  <Button
+                                    size="xs"
+                                    colorScheme="blue"
+                                    variant="outline"
+                                    onClick={() => { void switchWallet(activeRobot.config.id, 'user_provided') }}
+                                  >
+                                    Switch to User Wallet
+                                  </Button>
+                                )}
+                                {/* Fund wallet button for existing Privy wallets */}
+                                <Button
+                                  size="xs"
+                                  colorScheme="orange"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setPendingPrivyWallet(activeRobot.config.privyWalletAddress ?? null)
+                                    onFundingOpen()
+                                  }}
+                                >
+                                  Fund Gas
+                                </Button>
+                              </>
+                            )}
+                          </HStack>
+
+                          {/* Show both wallets if they exist */}
+                          {activeRobot.config.userWalletAddress && activeRobot.config.privyWalletAddress && (
+                            <VStack align="flex-start" spacing={1} fontSize="xs" color="gray.500" width="100%">
+                              <Text>
+                                <Text as="span" fontWeight="medium">User wallet:</Text>{' '}
+                                <Text as="span" fontFamily="mono">
+                                  {activeRobot.config.userWalletAddress.slice(0, 6)}...{activeRobot.config.userWalletAddress.slice(-4)}
+                                </Text>
+                                {activeRobot.config.walletSource === 'user_provided' && ' (active)'}
+                              </Text>
+                              <Text>
+                                <Text as="span" fontWeight="medium">Privy wallet:</Text>{' '}
+                                <Text as="span" fontFamily="mono">
+                                  {activeRobot.config.privyWalletAddress.slice(0, 6)}...{activeRobot.config.privyWalletAddress.slice(-4)}
+                                </Text>
+                                {activeRobot.config.walletSource === 'privy_created' && ' (active)'}
+                              </Text>
+                            </VStack>
+                          )}
+
+                          {activeRobot.config.ownerWallet && (
+                            <HStack spacing={2} width="100%" justify="space-between">
+                              <Text fontSize="sm" color="gray.600">
+                                <Text as="span" fontWeight="medium">Owner:</Text>{' '}
+                                <Text as="span" fontFamily="mono">{activeRobot.config.ownerWallet}</Text>
+                              </Text>
+                              {activeRobot.config.walletSource === 'privy_created' ? (
+                                <RobotPayoutButton
+                                  robotId={activeRobot.config.id}
+                                  robotName={activeRobot.config.name}
+                                  ownerWallet={activeRobot.config.ownerWallet}
+                                />
+                              ) : (
+                                <Text fontSize="xs" color="gray.500" fontStyle="italic">
+                                  Switch to Privy wallet to collect earnings
+                                </Text>
+                              )}
+                            </HStack>
+                          )}
                         </VStack>
                       </Collapse>
                     </Box>
@@ -233,6 +389,7 @@ export function RobotControlPage() {
                           <PurchaseAccess
                             robotHost={activeRobot.config.motorIp}
                             robotName={activeRobot.config.name}
+                            robotWallet={activeRobot.config.walletAddress}
                           />
                         ) : (
                           <>
@@ -263,6 +420,28 @@ export function RobotControlPage() {
           </ModalBody>
         </ModalContent>
       </Modal>
+
+      {/* Fund Privy Wallet Modal */}
+      {pendingPrivyWallet && activeRobot && (
+        <FundPrivyWalletModal
+          isOpen={isFundingOpen}
+          onClose={() => {
+            onFundingClose()
+            setPendingPrivyWallet(null)
+          }}
+          privyWalletAddress={pendingPrivyWallet}
+          robotName={activeRobot.config.name}
+          onFundingComplete={() => {
+            toast({
+              title: 'Wallet funded',
+              description: 'ETH sent to robot wallet for gas fees',
+              status: 'success',
+              duration: 5000,
+              isClosable: true,
+            })
+          }}
+        />
+      )}
     </Container>
   )
 }

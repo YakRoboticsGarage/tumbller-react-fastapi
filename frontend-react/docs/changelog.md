@@ -20,6 +20,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2025-12-29
+
+### Added
+- **Privy Wallet UI Integration**:
+  - `FundPrivyWalletModal` component for ETH gas funding
+  - User-specified ETH amount with real-time USD conversion
+  - Transaction signing via ethers.js Signer
+  - Transaction status feedback (pending, success, error)
+
+- **Wallet Balance Display**:
+  - Dual balance badges: USDC (green) and ETH (blue)
+  - Balance refresh button with loading state
+  - Balance fetching on component mount
+
+- **USDC Earnings Collection**:
+  - "Collect USDC" button with modal workflow
+  - Transfer status display with BaseScan transaction link
+  - Handles no_funds and insufficient_funds states
+
+- **Gas Funding Flow**:
+  - "Fund Gas" button for existing Privy wallets
+  - Automatic funding prompt on wallet switch to Privy
+  - ETH price display via CoinGecko API
+
+### Changed
+- **RobotPayoutButton**: Updated for USDC-only transfers
+  - Changed from `amount_wei` to `amount_usdc` in API types
+  - Dual balance display instead of single value
+  - Button text changed to "Collect USDC"
+
+- **Robot Management API Types**:
+  - Added `WalletBalanceResponse` interface
+  - Added `GasFundingInfoResponse` interface
+  - Updated `PayoutResponse` for USDC amounts
+
+### Fixed
+- **Blank Page After Schema Migration**: Filter invalid robots in Zustand persist merge
+- **USDC Decimal Display**: Use 6 decimals (not 18) for USDC formatting
+
+### Technical Details
+- USDC has 6 decimals, ETH has 18 - formatting functions handle both
+- Gas funding uses `parseEther()` from ethers.js
+- Transaction confirmation via `tx.wait()` before showing success
+
+---
+
 ## [1.3.0] - 2025-12-28
 
 ### Added
@@ -810,6 +856,8 @@ Ideas for future versions - see [future-improvements.md](future-improvements.md)
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 1.4.0 | 2025-12-29 | Privy wallet UI, USDC collection, gas funding |
+| 1.3.0 | 2025-12-28 | ENS integration, wallet UI improvements |
 | 1.2.1 | 2024-12-28 | x402 payment flow fixes, official client packages |
 | 1.2.0 | 2024-12-28 | x402 payments, wallet integration, backend API |
 | 1.1.0 | 2024-12-26 | Optional Logto authentication |
@@ -876,4 +924,4 @@ When adding new features or fixing bugs:
 ---
 
 **Maintained by:** Development Team
-**Last Updated:** December 28, 2024
+**Last Updated:** December 29, 2025

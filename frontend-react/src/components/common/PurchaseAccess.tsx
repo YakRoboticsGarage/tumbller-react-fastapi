@@ -2,11 +2,16 @@ import {
   Box,
   Button,
   VStack,
+  HStack,
   Text,
   Alert,
   AlertIcon,
   useToast,
+  useClipboard,
+  Tooltip,
+  IconButton,
 } from '@chakra-ui/react';
+import { CopyIcon, CheckIcon } from '@chakra-ui/icons';
 import { useWallet } from '../../hooks/useWallet';
 import { useSession } from '../../hooks/useSession';
 import { usePayment } from '../../hooks/usePayment';
@@ -16,14 +21,21 @@ import { WalletButton } from './WalletButton';
 interface PurchaseAccessProps {
   robotHost: string;
   robotName: string;
+  robotWallet?: string;
 }
 
-export function PurchaseAccess({ robotHost, robotName }: PurchaseAccessProps) {
+export function PurchaseAccess({ robotHost, robotName, robotWallet }: PurchaseAccessProps) {
   const { isConnected } = useWallet();
   const { hasActiveSession } = useSession();
   const { purchaseAccess, isPaying, error, clearError } = usePayment();
   const { sessionPrice, sessionDurationMinutes, paymentEnabled } = usePaymentConfig();
   const toast = useToast();
+  const { hasCopied, onCopy } = useClipboard(robotWallet ?? '');
+
+  // Format wallet for display
+  const displayWallet = robotWallet
+    ? `${robotWallet.slice(0, 6)}...${robotWallet.slice(-4)}`
+    : null;
 
   const priceDisplay = paymentEnabled ? `$${sessionPrice} USDC` : 'Free';
 
@@ -95,6 +107,36 @@ export function PurchaseAccess({ robotHost, robotName }: PurchaseAccessProps) {
         <Text color="gray.600">
           {sessionDurationMinutes} minutes of full control for <strong>{robotName}</strong> - {priceDisplay}
         </Text>
+        {displayWallet && paymentEnabled && (
+          <HStack
+            spacing={2}
+            fontSize="sm"
+            color="gray.600"
+            bg="white"
+            px={3}
+            py={2}
+            borderRadius="md"
+            borderWidth={1}
+            borderColor="gray.200"
+          >
+            <Text>Payment to:</Text>
+            <Tooltip label={hasCopied ? 'Copied!' : robotWallet} placement="top">
+              <Text fontFamily="mono" cursor="pointer" onClick={onCopy} _hover={{ color: 'brand.500' }}>
+                {displayWallet}
+              </Text>
+            </Tooltip>
+            <Tooltip label={hasCopied ? 'Copied!' : 'Copy address'}>
+              <IconButton
+                aria-label="Copy wallet address"
+                icon={hasCopied ? <CheckIcon /> : <CopyIcon />}
+                size="xs"
+                variant="ghost"
+                onClick={onCopy}
+                colorScheme={hasCopied ? 'green' : 'gray'}
+              />
+            </Tooltip>
+          </HStack>
+        )}
         <Button
           colorScheme="brand"
           size="lg"
