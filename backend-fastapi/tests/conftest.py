@@ -110,3 +110,16 @@ def other_wallet_address():
 def robot_host():
     """Test robot host."""
     return "finland-tumbller-01"
+
+
+@pytest.fixture
+def active_session(client, mock_robot_online, robot_host, wallet_address):
+    """Fixture to create an active session for a test wallet."""
+    # Purchase access
+    response = client.post(
+        "/api/v1/access/purchase",
+        json={"robot_host": robot_host},
+        headers={"X-Wallet-Address": wallet_address},
+    )
+    assert response.status_code == 200
+    return wallet_address, robot_host
