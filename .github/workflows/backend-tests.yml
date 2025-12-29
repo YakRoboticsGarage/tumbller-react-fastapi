@@ -29,7 +29,7 @@ jobs:
       run: pip install uv
 
     - name: Install dependencies
-      run: uv pip install . --all-extras
+      run: uv pip install '.[dev]'
 
     - name: Run tests
       run: uv run pytest
