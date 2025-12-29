@@ -1,0 +1,35 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'backend-fastapi/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'backend-fastapi/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend-fastapi
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install uv
+      run: pip install uv
+
+    - name: Install dependencies
+      run: uv sync --system --all-extras
+
+    - name: Run tests
+      run: uv run pytest
