@@ -9,6 +9,7 @@ on:
     branches: [ "main" ]
     paths:
       - 'backend-fastapi/**'
+  workflow_dispatch:
 
 jobs:
   test:
