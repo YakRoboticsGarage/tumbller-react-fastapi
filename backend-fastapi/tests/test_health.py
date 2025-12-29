@@ -11,13 +11,13 @@ def test_health_endpoint(client):
     assert "payment_enabled" in data
 
 
-def test_health_shows_payment_disabled(client):
-    """Test health check shows payment is disabled by default."""
+def test_health_shows_payment_enabled(client):
+    """Test health check shows payment is enabled."""
     response = client.get("/health")
 
     assert response.status_code == 200
     data = response.json()
-    assert data["payment_enabled"] is False
+    assert data["payment_enabled"] is True
 
 
 def test_access_config_endpoint(client):
@@ -31,12 +31,12 @@ def test_access_config_endpoint(client):
     assert "session_price" in data
 
 
-def test_access_config_payment_disabled(client):
-    """Test access config when payment is disabled."""
+def test_access_config_payment_enabled(client):
+    """Test access config when payment is enabled."""
     response = client.get("/api/v1/access/config")
 
     assert response.status_code == 200
     data = response.json()
-    assert data["payment_enabled"] is False
-    assert data["session_duration_minutes"] == 10
-    assert data["session_price"] is None  # No price when disabled
+    assert data["payment_enabled"] is True
+    assert data["session_duration_minutes"] > 0
+    assert data["session_price"] is not None  # Price shown when enabled

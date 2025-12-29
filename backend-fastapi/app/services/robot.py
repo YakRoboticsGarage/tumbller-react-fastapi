@@ -1,6 +1,5 @@
 import re
 from dataclasses import dataclass
-from typing import Optional
 
 import httpx
 
@@ -46,7 +45,7 @@ class RobotService:
             # mDNS name - append .local
             return f"http://{robot_host}.local"
 
-    def _get_camera_url(self, robot_host: str, camera_host: Optional[str] = None) -> str:
+    def _get_camera_url(self, robot_host: str, camera_host: str | None = None) -> str:
         """Get base URL for robot camera.
 
         Args:
@@ -67,7 +66,7 @@ class RobotService:
             # mDNS: robot-name-cam.local
             return f"http://{robot_host}-cam.local"
 
-    async def get_robot_info(self, robot_host: str) -> Optional[RobotInfo]:
+    async def get_robot_info(self, robot_host: str) -> RobotInfo | None:
         """Get robot info from /info endpoint."""
         url = f"{self._get_robot_url(robot_host)}/info"
         async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -84,8 +83,8 @@ class RobotService:
                 return None
 
     async def get_camera_info(
-        self, robot_host: str, camera_host: Optional[str] = None
-    ) -> Optional[RobotInfo]:
+        self, robot_host: str, camera_host: str | None = None
+    ) -> RobotInfo | None:
         """Get camera info from /info endpoint."""
         url = f"{self._get_camera_url(robot_host, camera_host)}/info"
         async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -117,8 +116,8 @@ class RobotService:
         return info is not None
 
     async def get_camera_frame(
-        self, robot_host: str, camera_host: Optional[str] = None
-    ) -> Optional[bytes]:
+        self, robot_host: str, camera_host: str | None = None
+    ) -> bytes | None:
         """Get single frame from robot camera."""
         url = f"{self._get_camera_url(robot_host, camera_host)}/getImage"
         async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -131,14 +130,14 @@ class RobotService:
                 return None
 
     async def check_camera_online(
-        self, robot_host: str, camera_host: Optional[str] = None
+        self, robot_host: str, camera_host: str | None = None
     ) -> bool:
         """Check if robot camera is online via /info endpoint."""
         info = await self.get_camera_info(robot_host, camera_host)
         return info is not None
 
     async def check_status(
-        self, robot_host: str, camera_host: Optional[str] = None
+        self, robot_host: str, camera_host: str | None = None
     ) -> dict:
         """Check overall robot status (motor + camera) using /info endpoints."""
         motor_info = await self.get_robot_info(robot_host)

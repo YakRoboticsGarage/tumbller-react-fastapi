@@ -128,7 +128,7 @@ def test_motor_command_without_session(client, wallet_address):
     )
 
     assert response.status_code == 403
-    assert "no robot bound to session" in response.json()["detail"].lower()
+    assert "no active session" in response.json()["detail"].lower()
 
 
 def test_motor_command_without_wallet_header(client):
@@ -156,7 +156,7 @@ def test_motor_command_with_wrong_wallet(
     )
 
     assert response.status_code == 403
-    assert "no robot bound to session" in response.json()["detail"].lower()
+    assert "no active session" in response.json()["detail"].lower()
 
 
 def test_motor_command_uses_session_bound_robot(

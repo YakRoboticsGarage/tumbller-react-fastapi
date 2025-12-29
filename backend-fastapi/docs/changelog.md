@@ -9,17 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
--
-
 ### Changed
--
+- **ENS Module Simplification**: Replaced custom keccak256/JSON-RPC implementation with web3.py
+  - Reduced `app/core/ens.py` from ~200 lines to ~40 lines
+  - Replaced `pycryptodome` dependency with `web3>=7.0.0`
+  - Uses web3.py's built-in ENS support for name resolution
+
+- **Test Suite Updated for Payment Enabled by Default**:
+  - Tests now expect `payment_enabled=True` (matching production `.env`)
+  - Created `create_test_app()` in conftest.py that bypasses x402 middleware
+  - Updated assertions in test_health.py, test_session.py, test_motor_control.py
 
 ### Fixed
--
+- **datetime.utcnow() Deprecation Warnings**: Replaced with `datetime.now(UTC)` in `app/services/session.py`
+  - Reduced test warnings from 61 to 1 (remaining warning is from external `websockets` library)
 
-### Removed
--
+### Technical Details
+- Test mock robot IP changed from 192.168.8.201 to 192.168.1.100
+- Linting auto-fixed: import ordering, `Optional[X]` → `X | None` syntax
 
 ---
 

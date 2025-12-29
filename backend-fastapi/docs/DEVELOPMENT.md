@@ -1,7 +1,7 @@
 # Tumbller Robot Control API - Development Guide
 
-**Version**: 1.0.1
-**Last Updated**: December 28, 2024
+**Version**: 1.2.0
+**Last Updated**: December 29, 2025
 
 ---
 
@@ -42,6 +42,15 @@ pytest (testing)
 ---
 
 ## Project Status
+
+✅ **v1.2.0 Complete** (December 29, 2025)
+- Simplified ENS module with web3.py (replaced pycryptodome)
+- Updated tests to work with payment enabled by default
+- Fixed datetime.utcnow() deprecation warnings
+
+✅ **v1.1.0 Complete** (December 28, 2025)
+- ENS name resolution for payment addresses
+- Network configuration (base-sepolia/base)
 
 ✅ **v1.0.1 Complete** (December 28, 2024)
 - Fixed x402 middleware CORS issues

@@ -1,16 +1,51 @@
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import AsyncMock, patch
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.testclient import TestClient
 
-from app.main import app
-from app.services.session import _sessions, _robot_locks
+from app.api.v1 import access, robot
+from app.core.config import get_settings
 from app.services.robot import RobotInfo
+from app.services.session import _robot_locks, _sessions
+
+
+def create_test_app() -> FastAPI:
+    """Create a test app without x402 middleware but with payment_enabled=True."""
+    settings = get_settings()
+
+    app = FastAPI(
+        title="Tumbller Robot Control API (Test)",
+        version="1.0.0",
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["PAYMENT-REQUIRED", "X-PAYMENT-RESPONSE"],
+    )
+
+    # No x402 middleware - we test the endpoints directly
+
+    app.include_router(access.router, prefix="/api/v1/access", tags=["Access"])
+    app.include_router(robot.router, prefix="/api/v1/robot", tags=["Robot"])
+
+    @app.get("/health")
+    async def health():
+        return {"status": "healthy", "payment_enabled": settings.payment_enabled}
+
+    return app
 
 
 @pytest.fixture
 def client():
-    """Create a test client."""
-    return TestClient(app)
+    """Create a test client with payment enabled but x402 middleware bypassed."""
+    test_app = create_test_app()
+    return TestClient(test_app)
 
 
 @pytest.fixture(autouse=True)
@@ -28,7 +63,7 @@ def mock_robot_online():
     """Mock robot service to simulate online robot."""
     with patch("app.services.robot.robot_service.get_robot_info") as mock_info, \
          patch("app.services.robot.robot_service.get_camera_info") as mock_camera:
-        mock_info.return_value = RobotInfo(mdns_name="finland-tumbller-01", ip="192.168.8.201")
+        mock_info.return_value = RobotInfo(mdns_name="finland-tumbller-01", ip="192.168.1.100")
         mock_camera.return_value = None  # Camera offline
         yield mock_info, mock_camera
 

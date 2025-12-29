@@ -100,6 +100,26 @@ Please write tests for the above tests we ran in the tests folder
 
 ---
 
+### Update Tests for Different Default (Worked: 2025-12-29)
+
+**Context**: Tests expected `payment_enabled=False` but production `.env` has `True`
+
+**Prompt Used**:
+```
+Let's modify the tests so that the default is payment enabled
+```
+
+**Result**:
+- Created `create_test_app()` that bypasses x402 middleware
+- Updated all assertions to expect `payment_enabled=True`
+- Tests now match production configuration
+
+**Notes**:
+- Tests should match production defaults when possible
+- When middleware intercepts requests, create test app without it
+
+---
+
 ## Debugging
 
 ### [No debugging prompts yet]
@@ -107,6 +127,23 @@ Please write tests for the above tests we ran in the tests folder
 ---
 
 ## Refactoring
+
+### Simplify Module with Library (Worked: 2025-12-29)
+
+**Context**: Custom ENS implementation was ~200 lines with manual keccak256 hashing
+
+**Prompt Used**:
+```
+@backend-fastapi/app/core/ens.py this can simplified with web3.py. Let's do that.
+```
+
+**Result**: Replaced entire implementation with ~40 lines using web3.py's built-in ENS support
+
+**Notes**:
+- Always check if a library already does what you're implementing manually
+- web3.py handles namehash, resolver lookup, and address resolution automatically
+
+---
 
 ### Handle Multiple Connection Types (Worked: 2024-12-27)
 

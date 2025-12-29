@@ -242,23 +242,83 @@ app.add_middleware(
 
 ## Testing
 
-### [Problem Title]
+### Tests Failing with 402 When Payment Enabled
 
-**Date**: YYYY-MM-DD
+**Date**: 2025-12-29
 
 **Symptoms**:
 ```
+FAILED tests/test_session.py::test_purchase_access_success - assert 402 == 200
+FAILED tests/test_motor_control.py::test_motor_forward_with_valid_session - assert 402 == 200
+# 18 tests failing with 402 Payment Required
 ```
 
 **Root Cause**:
-
+Tests used the real app from `app.main:app` which includes x402 middleware when `PAYMENT_ENABLED=true` in `.env`. The x402 middleware intercepts `/api/v1/access/purchase` and returns 402 before reaching the endpoint.
 
 **Solution**:
+Create a test-specific app in `conftest.py` that excludes x402 middleware:
+
 ```python
+# tests/conftest.py
+def create_test_app() -> FastAPI:
+    """Create a test app without x402 middleware but with payment_enabled=True."""
+    settings = get_settings()
+    app = FastAPI(title="Tumbller Robot Control API (Test)")
+
+    app.add_middleware(CORSMiddleware, ...)
+    # No x402 middleware - we test the endpoints directly
+
+    app.include_router(access.router, prefix="/api/v1/access")
+    app.include_router(robot.router, prefix="/api/v1/robot")
+    return app
+
+@pytest.fixture
+def client():
+    test_app = create_test_app()
+    return TestClient(test_app)
 ```
 
 **Prevention**:
-- 
+- When testing endpoints behind payment/auth middleware, create a test app that bypasses the middleware
+- Test middleware behavior separately if needed
+- Don't rely on `.env` defaults matching test expectations
+
+**Related Files**: `tests/conftest.py`
+
+---
+
+### datetime.utcnow() Deprecation Warnings
+
+**Date**: 2025-12-29
+
+**Symptoms**:
+```
+DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal
+  in a future version. Use timezone-aware objects to represent datetimes in UTC:
+  datetime.datetime.now(datetime.UTC).
+# 61 warnings in test output
+```
+
+**Root Cause**:
+Python 3.12+ deprecates `datetime.utcnow()` in favor of timezone-aware datetimes.
+
+**Solution**:
+```python
+# Before
+from datetime import datetime
+now = datetime.utcnow()
+
+# After
+from datetime import UTC, datetime
+now = datetime.now(UTC)
+```
+
+**Prevention**:
+- Always use timezone-aware datetimes: `datetime.now(UTC)`
+- Configure linter to catch `utcnow()` usage
+
+**Related Files**: `app/services/session.py` 
 
 ---
 

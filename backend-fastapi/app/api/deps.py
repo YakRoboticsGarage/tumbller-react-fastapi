@@ -1,4 +1,3 @@
-from typing import Optional
 
 from fastapi import Header, HTTPException
 
@@ -7,7 +6,7 @@ from app.services.session import has_valid_session
 
 
 def require_session(
-    x_wallet_address: Optional[str] = Header(None, description="Wallet address"),
+    x_wallet_address: str | None = Header(None, description="Wallet address"),
 ) -> str:
     """Dependency to verify wallet has active session.
 

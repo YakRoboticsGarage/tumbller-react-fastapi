@@ -17,7 +17,7 @@ def test_purchase_access_success(client, mock_robot_online, robot_host, wallet_a
     assert data["session"]["robot_host"] == robot_host
     assert data["session"]["expires_at"] is not None
     assert data["session"]["remaining_seconds"] > 0
-    assert data["payment_tx"] is None  # Payment disabled
+    assert data["payment_tx"] is None  # No x402 middleware in test
 
 
 def test_purchase_access_requires_wallet_header(client, mock_robot_online, robot_host):

@@ -11,7 +11,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "pydantic>=2.5.0",
     "pydantic-settings>=2.1.0",
-    "pycryptodome>=3.23.0",
+    "web3>=7.0.0",
 ]
 
 [project.optional-dependencies]

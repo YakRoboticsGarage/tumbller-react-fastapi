@@ -14,9 +14,18 @@
 
 ---
 
-## Last Session Summary
+## Session History
 
-**Date**: 2024-12-27
+Daily session logs are stored in dated files. See the most recent for current context.
+
+| Date | File | Summary |
+|------|------|---------|
+| 2025-12-29 | [session-2025-12-29.md](session-2025-12-29.md) | ENS simplification with web3.py, test suite updates |
+| 2024-12-27 | (below) | Initial backend implementation |
+
+---
+
+## 2024-12-27 - Initial Backend Implementation
 
 **What Was Worked On**:
 - Implemented full backend API for robot control with session-based access
@@ -39,12 +48,6 @@
 - Server runs successfully with `uv run uvicorn app.main:app --reload`
 - Camera tests deferred (hardware offline)
 
-**Next Steps Planned**:
-1. Rename `/motor/back` to `/motor/backward` in firmware and server
-2. Add camera tests when hardware is online
-3. Implement x402 payment integration when PAYMENT_ENABLED=true
-4. Fix datetime.utcnow() deprecation warnings
-
 ---
 
 ## Active Tasks
@@ -61,12 +64,13 @@
 |------|---------|---------------|
 | Camera tests | Camera hardware offline | Wait for hardware availability |
 
-### Ready to Start
+### Completed (2025-12-29)
 
-| Task | Priority | Notes |
-|------|----------|-------|
-| x402 payment integration | Medium | Enable when PAYMENT_ENABLED=true |
-| Fix deprecation warnings | Low | datetime.utcnow() -> datetime.now(UTC) |
+| Task | Notes |
+|------|-------|
+| ENS simplification | Replaced pycryptodome with web3.py |
+| Fix deprecation warnings | datetime.utcnow() → datetime.now(UTC) |
+| Update tests for payment enabled | Tests now work with PAYMENT_ENABLED=true |
 
 ---
 
@@ -99,7 +103,7 @@ Issues noticed but deferred:
 
 | Item | Priority | Effort | Notes |
 |------|----------|--------|-------|
-| datetime.utcnow() deprecation | Low | Low | Use datetime.now(datetime.UTC) |
+| ~~datetime.utcnow() deprecation~~ | ~~Low~~ | ~~Low~~ | ✅ Fixed 2025-12-29 |
 | /motor/back naming | Medium | Low | Should be /motor/backward for consistency |
 | In-memory sessions | Medium | Medium | Consider Redis for production |
 

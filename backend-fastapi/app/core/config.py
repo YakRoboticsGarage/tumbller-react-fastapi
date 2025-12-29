@@ -53,6 +53,6 @@ class Settings(BaseSettings):
         return self.payment_address
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     return Settings()

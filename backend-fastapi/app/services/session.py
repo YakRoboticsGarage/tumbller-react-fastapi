@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 from app.core.config import get_settings
 
@@ -13,7 +12,7 @@ class SessionData:
     robot_host: str  # The robot this wallet is bound to (mDNS name or IP)
     created_at: datetime
     expires_at: datetime
-    payment_tx: Optional[str] = None
+    payment_tx: str | None = None
 
 
 # In-memory session store (use Redis for production)
@@ -28,11 +27,11 @@ _robot_locks: dict[str, str] = {}
 def create_session(
     wallet_address: str,
     robot_host: str,
-    payment_tx: Optional[str] = None,
+    payment_tx: str | None = None,
 ) -> SessionData:
     """Create new access session binding wallet to a specific robot."""
     settings = get_settings()
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     expires_at = now + timedelta(minutes=settings.session_duration_minutes)
     wallet_lower = wallet_address.lower()
     robot_lower = robot_host.lower()
@@ -57,7 +56,7 @@ def create_session(
     return session
 
 
-def get_session(wallet_address: str) -> Optional[SessionData]:
+def get_session(wallet_address: str) -> SessionData | None:
     """Get active session for wallet address."""
     wallet_lower = wallet_address.lower()
     session = _sessions.get(wallet_lower)
@@ -66,7 +65,7 @@ def get_session(wallet_address: str) -> Optional[SessionData]:
         return None
 
     # Check if expired
-    if datetime.utcnow() > session.expires_at:
+    if datetime.now(UTC) > session.expires_at:
         _cleanup_session(wallet_lower)
         return None
 
@@ -96,7 +95,7 @@ def get_remaining_seconds(wallet_address: str) -> int:
     if session is None:
         return 0
 
-    remaining = (session.expires_at - datetime.utcnow()).total_seconds()
+    remaining = (session.expires_at - datetime.now(UTC)).total_seconds()
     return max(0, int(remaining))
 
 
@@ -115,7 +114,7 @@ def is_robot_available(robot_host: str) -> bool:
     return False
 
 
-def get_robot_lock_holder(robot_host: str) -> Optional[str]:
+def get_robot_lock_holder(robot_host: str) -> str | None:
     """Get wallet address that currently has the robot locked."""
     robot_lower = robot_host.lower()
     if robot_lower not in _robot_locks:
@@ -129,7 +128,7 @@ def get_robot_lock_holder(robot_host: str) -> Optional[str]:
     return lock_holder
 
 
-def get_session_robot(wallet_address: str) -> Optional[str]:
+def get_session_robot(wallet_address: str) -> str | None:
     """Get the robot host (mDNS name or IP) bound to this wallet's session."""
     session = get_session(wallet_address)
     if session is None:

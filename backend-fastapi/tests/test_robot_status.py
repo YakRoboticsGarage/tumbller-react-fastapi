@@ -9,7 +9,7 @@ def test_robot_status_online(client, mock_robot_online, robot_host):
     data = response.json()
     assert data["robot_host"] == robot_host
     assert data["motor_online"] is True
-    assert data["motor_ip"] == "192.168.8.201"
+    assert data["motor_ip"] == "192.168.1.100"
     assert data["motor_mdns"] == "finland-tumbller-01"
     assert data["camera_online"] is False
     assert data["available"] is True

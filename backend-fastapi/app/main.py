@@ -32,9 +32,9 @@ def create_app() -> FastAPI:
 
     if settings.payment_enabled and payment_address:
         try:
-            from x402.fastapi.middleware import require_payment
             from starlette.requests import Request
             from starlette.responses import Response
+            from x402.fastapi.middleware import require_payment
 
             # Get the x402 middleware
             x402_middleware = require_payment(

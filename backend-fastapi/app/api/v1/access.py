@@ -1,4 +1,3 @@
-from typing import Optional
 
 from fastapi import APIRouter, Header, HTTPException, Request
 
@@ -69,7 +68,7 @@ async def purchase_access(
 
 @router.get("/status", response_model=SessionResponse)
 async def check_access(
-    x_wallet_address: Optional[str] = Header(None, description="Wallet address to check"),
+    x_wallet_address: str | None = Header(None, description="Wallet address to check"),
 ):
     """Check if wallet has active access session."""
     settings = get_settings()
