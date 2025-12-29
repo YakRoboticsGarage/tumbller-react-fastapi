@@ -17,6 +17,10 @@ jobs:
     defaults:
       run:
         working-directory: ./backend-fastapi
+    env:
+      PAYMENT_ENABLED: "true"
+      PAYMENT_ADDRESS: "0x1234567890abcdef1234567890abcdef12345678"
+      X402_NETWORK: "base-sepolia"
 
     steps:
     - uses: actions/checkout@v4
