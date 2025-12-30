@@ -9,6 +9,9 @@ import {
 import { useWallet } from '../hooks/useWallet';
 import { checkSession, type SessionStatus } from '../services/accessApi';
 
+// localStorage key for payment tx persistence
+const PAYMENT_TX_STORAGE_KEY = 'tumbller_payment_tx';
+
 interface SessionContextType {
   hasActiveSession: boolean;
   sessionRobotHost: string | null;
@@ -69,6 +72,26 @@ export function SessionProvider({ children }: SessionProviderProps) {
         }
         return prev;
       });
+      // Restore payment_tx from localStorage if session is active
+      // (Backend doesn't store tx hash - it comes from x402 response header on frontend)
+      if (status.active) {
+        try {
+          const stored = localStorage.getItem(PAYMENT_TX_STORAGE_KEY);
+          if (stored) {
+            const { txHash, walletAddress } = JSON.parse(stored) as {
+              txHash: string;
+              walletAddress: string;
+              timestamp: number;
+            };
+            // Only restore if it's for the same wallet
+            if (walletAddress === address.toLowerCase() && txHash) {
+              setPaymentTx(txHash);
+            }
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
     } catch (err) {
       console.error('Failed to check session:', err);
       setError(err instanceof Error ? err.message : 'Failed to check session');
@@ -126,10 +149,20 @@ export function SessionProvider({ children }: SessionProviderProps) {
     }
     if (txHash) {
       setPaymentTx(txHash);
+      // Persist to localStorage for restoration after logout/login
+      try {
+        localStorage.setItem(PAYMENT_TX_STORAGE_KEY, JSON.stringify({
+          txHash,
+          walletAddress: address?.toLowerCase(),
+          timestamp: Date.now(),
+        }));
+      } catch {
+        // Ignore localStorage errors
+      }
     }
     setIsLoading(false);
     setError(null);
-  }, []);
+  }, [address]);
 
   const hasActiveSession = session?.active === true && remainingSeconds > 0;
   const sessionRobotHost = session?.robot_host || null;

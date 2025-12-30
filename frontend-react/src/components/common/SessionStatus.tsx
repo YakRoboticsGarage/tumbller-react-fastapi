@@ -1,7 +1,8 @@
-import { Box, HStack, Text, Badge, Progress, Link } from '@chakra-ui/react';
+import { Box, HStack, Text, Badge, Progress, Link, Image } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import { useSession, formatTime } from '../../hooks/useSession';
 import { DEFAULT_CHAIN } from '../../config/chains';
+import ycLogo from '../../assets/yclogo.jpeg';
 
 export function SessionStatus() {
   const { hasActiveSession, sessionRobotHost, remainingSeconds, initialSeconds, isLoading, paymentTx } =
@@ -14,17 +15,23 @@ export function SessionStatus() {
 
   if (isLoading) {
     return (
-      <Badge colorScheme="gray" px={3} py={1}>
-        Checking session...
-      </Badge>
+      <HStack spacing={3} align="center">
+        <Image src={ycLogo} alt="Yak Robotics" boxSize={10} borderRadius="full" />
+        <Badge colorScheme="gray" px={3} py={1}>
+          Checking session...
+        </Badge>
+      </HStack>
     );
   }
 
   if (!hasActiveSession) {
     return (
-      <Badge colorScheme="red" px={3} py={1}>
-        No Active Session
-      </Badge>
+      <HStack spacing={3} align="center">
+        <Image src={ycLogo} alt="Yak Robotics" boxSize={10} borderRadius="full" />
+        <Badge colorScheme="red" px={3} py={1}>
+          No Active Session
+        </Badge>
+      </HStack>
     );
   }
 
@@ -34,13 +41,15 @@ export function SessionStatus() {
     progress < 20 ? 'red' : progress < 50 ? 'yellow' : 'green';
 
   return (
-    <Box w="220px">
-      <HStack justify="space-between" mb={1}>
-        <Badge colorScheme="green">Active</Badge>
-        <Text fontSize="sm" fontWeight="bold">
-          {formatTime(remainingSeconds)}
-        </Text>
-      </HStack>
+    <HStack spacing={3} align="start">
+      <Image src={ycLogo} alt="Yak Robotics" boxSize={10} borderRadius="full" />
+      <Box w="180px">
+        <HStack justify="space-between" mb={1}>
+          <Badge colorScheme="green">Active</Badge>
+          <Text fontSize="sm" fontWeight="bold">
+            {formatTime(remainingSeconds)}
+          </Text>
+        </HStack>
       <Progress
         value={progress}
         size="sm"
@@ -72,6 +81,7 @@ export function SessionStatus() {
           Free Session
         </Text>
       )}
-    </Box>
+      </Box>
+    </HStack>
   );
 }

@@ -10,7 +10,6 @@ export interface SessionStatus {
   robot_host: string | null;
   expires_at: string | null;
   remaining_seconds: number | null;
-  payment_tx?: string | null;
 }
 
 export interface PurchaseRequest {

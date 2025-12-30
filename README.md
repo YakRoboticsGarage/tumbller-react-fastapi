@@ -10,13 +10,14 @@ Control ESP32-based Tumbller robots through a web interface with session-based a
 - Motor controls (forward, back, left, right) via ESP32S3
 - Live camera streaming via ESP-CAM
 - x402 payment integration (USDC on Base Sepolia/Mainnet)
-- Wallet connection (Coinbase Wallet, MetaMask)
-- Session-based access control with countdown timer
+- **Privy wallet authentication** - login with MetaMask, Coinbase Wallet, WalletConnect
+- Session-based access control with countdown timer and transaction tracking
 - Multi-robot support with persistent storage
 - **Privy wallet integration** for robot earnings management
 - **Dual wallet support** - switch between user-provided and Privy-created wallets
 - **USDC earnings collection** - transfer robot earnings to owner wallet
 - **ENS/Base name resolution** for owner wallet addresses
+- **Yak Robotics branding** - logo throughout the UI
 
 ## Architecture
 
@@ -25,19 +26,23 @@ Control ESP32-based Tumbller robots through a web interface with session-based a
 │  React Frontend │────▶│  FastAPI Backend│────▶│  ESP32 Robots   │
 │  (Vite + Chakra)│     │  (SQLAlchemy)   │     │  (Motor + Cam)  │
 │                 │     │                 │     │                 │
-│  • Zustand      │     │  • Robot CRUD   │     │  • HTTP REST    │
-│  • React Query  │     │  • x402 Proxy   │     │  • MJPEG Stream │
-│  • ethers.js    │     │  • Privy API    │     │                 │
+│  • Privy Auth   │     │  • Robot CRUD   │     │  • HTTP REST    │
+│  • Zustand      │     │  • x402 Proxy   │     │  • MJPEG Stream │
+│  • React Query  │     │  • Privy API    │     │                 │
+│  • ethers.js    │     │  • Sessions     │     │                 │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
          │                       │
-         │                       ├──────────────────┐
-         │                       ▼                  ▼
-         │              ┌─────────────────┐ ┌─────────────────┐
-         └─────────────▶│ x402 Facilitator│ │   Privy API     │
-                        │ (Coinbase)      │ │ (Wallet Mgmt)   │
-                        └─────────────────┘ └─────────────────┘
-                                 │                  │
-                                 ▼                  ▼
+         ├───────────────────────┼──────────────────┐
+         │                       │                  │
+         ▼                       ▼                  ▼
+┌─────────────────┐     ┌─────────────────┐ ┌─────────────────┐
+│   Privy SDK     │     │ x402 Facilitator│ │   Privy API     │
+│ (Wallet Login)  │     │ (Coinbase)      │ │ (Robot Wallets) │
+└─────────────────┘     └─────────────────┘ └─────────────────┘
+         │                       │                  │
+         └───────────────────────┴──────────────────┘
+                                 │
+                                 ▼
                         ┌───────────────────────────────────┐
                         │        Base Network (L2)          │
                         │   USDC Payments + Robot Wallets   │
@@ -86,6 +91,9 @@ cp .env.example .env
 # Edit .env:
 #   VITE_API_URL=http://localhost:8000
 #   VITE_X402_NETWORK=base-sepolia
+#   VITE_ENABLE_AUTH=true
+#   VITE_AUTH_METHOD=privy
+#   VITE_PRIVY_APP_ID=your-privy-app-id
 
 # Start dev server
 pnpm dev
@@ -136,10 +144,10 @@ PAYMENT_ENABLED=false
 
 ## Usage
 
-1. **Connect Wallet** - Click "Connect Wallet" (Coinbase Wallet prioritized)
+1. **Login with Wallet** - Connect via Privy (MetaMask, Coinbase Wallet, or WalletConnect)
 2. **Add Robot** - Enter robot name, ESP32 IP addresses, and optionally a wallet address
-3. **Get Access** - Pay with USDC to start a session
-4. **Control Robot** - Use motor controls and camera stream
+3. **Get Access** - Pay with USDC to start a session (transaction hash shown in UI)
+4. **Control Robot** - Use motor controls and camera stream during active session
 5. **Collect Earnings** - Transfer USDC from robot wallet to your owner wallet
 
 ### Wallet Management
@@ -159,6 +167,7 @@ You can switch between wallet types in the Robot Details panel. Privy wallets re
 - Zustand (state management)
 - React Query (server state)
 - ethers.js v6
+- Privy SDK (wallet authentication)
 - @x402/fetch, @x402/evm
 - Vitest + React Testing Library
 
@@ -176,8 +185,12 @@ You can switch between wallet types in the Robot Details panel. Privy wallets re
 ```
 ├── frontend-react/          # React SPA
 │   ├── src/
+│   │   ├── assets/          # Static assets (logo, images)
 │   │   ├── components/      # UI components
-│   │   ├── providers/       # Context providers (Wallet, Session)
+│   │   ├── config/          # App configuration (Privy, chains)
+│   │   ├── hooks/           # Custom React hooks (auth, wallet, session)
+│   │   ├── pages/           # Route pages (RobotControl, WalletLogin)
+│   │   ├── providers/       # Context providers (Auth, Wallet, Session)
 │   │   ├── services/        # API clients
 │   │   ├── stores/          # Zustand stores
 │   │   └── test/            # Test utilities and mocks
@@ -206,6 +219,7 @@ You can switch between wallet types in the Robot Details panel. Privy wallets re
 | Document | Description |
 |----------|-------------|
 | [Frontend README](frontend-react/README.md) | Frontend setup and usage |
+| [Privy Authentication Guide](frontend-react/docs/Privy_Authentication_Guide.md) | Wallet auth setup |
 | [Frontend DEVELOPMENT.md](frontend-react/DEVELOPMENT.md) | Frontend dev guide |
 | [Backend DEVELOPMENT.md](backend-fastapi/docs/DEVELOPMENT.md) | Backend dev guide |
 | [ESP32 API Reference](frontend-react/docs/ESP32_API_Reference.md) | Robot endpoints |

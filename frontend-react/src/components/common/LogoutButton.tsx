@@ -2,7 +2,7 @@ import { Button } from '@chakra-ui/react';
 import { useAuth, useAuthEnabled } from '../../hooks/useAuth';
 
 export function LogoutButton() {
-  const { signOut } = useAuth();
+  const { logout } = useAuth();
   const isAuthEnabled = useAuthEnabled();
 
   // Don't render if auth is disabled
@@ -10,16 +10,16 @@ export function LogoutButton() {
     return null;
   }
 
-  const handleSignOut = () => {
-    void signOut(window.location.origin);
+  const handleLogout = () => {
+    void logout();
   };
 
   return (
     <Button
-      onClick={handleSignOut}
+      onClick={handleLogout}
       colorScheme="orange"
       variant="outline"
-      size={{ base: "sm", md: "md" }}
+      size={{ base: 'sm', md: 'md' }}
     >
       Log Out
     </Button>

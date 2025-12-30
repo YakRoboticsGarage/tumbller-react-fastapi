@@ -20,6 +20,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] - 2025-12-30
+
+### Added
+- **Privy Wallet-Based User Authentication**:
+  - Wallet-only login via MetaMask, Coinbase Wallet, or WalletConnect
+  - No embedded wallet creation (users must bring their own wallet)
+  - `WalletLoginPage` component with branded UI
+  - `PrivyAuthProvider` for Privy SDK integration
+  - `VITE_AUTH_METHOD` environment variable to toggle between Privy and Logto
+
+- **Unified Authentication Abstraction**:
+  - `useAuth()` hook works with both Privy and Logto
+  - `useAuthMethod()` hook to detect current auth method
+  - `usePrivyAuth()` hook for Privy-specific state
+  - Consistent `AuthState` interface across providers
+
+- **Privy Wallet Integration**:
+  - `useWallet()` hook auto-detects Privy vs WalletProvider
+  - Automatic wallet connection after Privy login
+  - Seamless x402 payment signing with Privy wallet
+  - Chain switching support for Privy wallets
+
+- **Documentation**:
+  - `docs/Privy_Authentication_Guide.md` - Setup and usage guide
+  - Updated README with authentication options
+  - Updated plan document as IMPLEMENTED
+
+### Changed
+- **AuthProvider**: Now supports both Logto and Privy via toggle
+- **ProtectedRoute**: Shows `WalletLoginPage` for Privy auth
+- **LogoutButton**: Uses unified `logout()` method
+- **UserProfile**: Shows wallet address for Privy, user info for Logto
+- **WalletButton**: Adapts UI for Privy mode (no connect button needed)
+- **LoginButton**: Only renders for Logto auth method
+
+### Technical Details
+- Privy SDK configured with `embeddedWallets.createOnLogin: 'off'`
+- Wallet signer obtained via `getEthersProvider()` + `BrowserProvider`
+- Auth method determined at module level for consistency
+
+---
+
 ## [1.4.0] - 2025-12-29
 
 ### Added

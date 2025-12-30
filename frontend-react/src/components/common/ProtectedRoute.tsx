@@ -1,7 +1,8 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Box, Spinner, VStack, Text } from '@chakra-ui/react';
-import { useAuth, useAuthEnabled } from '../../hooks/useAuth';
+import { useAuth, useAuthEnabled, useAuthMethod } from '../../hooks/useAuth';
 import { LoginButton } from './LoginButton';
+import { WalletLoginPage } from '../../pages/WalletLoginPage';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -12,22 +13,32 @@ interface ProtectedRouteProps {
  * - If auth is disabled, renders children directly
  * - If auth is enabled and user is not authenticated, shows login page
  * - If auth is enabled and user is authenticated, renders children
+ * - Shows appropriate login page based on auth method (Logto or Privy)
  */
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, error } = useAuth();
   const isAuthEnabled = useAuthEnabled();
+  const authMethod = useAuthMethod();
   const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
 
   // Debug logging
   useEffect(() => {
     console.log('[ProtectedRoute] Auth state:', {
       isAuthEnabled,
+      authMethod,
       isAuthenticated,
       isLoading,
       hasInitiallyLoaded,
       error: error?.message || error,
     });
-  }, [isAuthEnabled, isAuthenticated, isLoading, hasInitiallyLoaded, error]);
+  }, [
+    isAuthEnabled,
+    authMethod,
+    isAuthenticated,
+    isLoading,
+    hasInitiallyLoaded,
+    error,
+  ]);
 
   // Track when we've completed the initial load
   useEffect(() => {
@@ -67,15 +78,25 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
               Authentication Error
             </Text>
             <Text fontSize="md" color="gray.600" textAlign="center">
-              {typeof error === 'string' ? error : error.message || 'An error occurred during authentication'}
+              {typeof error === 'string'
+                ? error
+                : error.message || 'An error occurred during authentication'}
             </Text>
           </VStack>
 
-          <LoginButton />
-
-          <Text fontSize="sm" color="gray.500" textAlign="center">
-            Try logging in again
-          </Text>
+          {authMethod === 'privy' ? (
+            // For Privy, show a simple retry message
+            <Text fontSize="sm" color="gray.500" textAlign="center">
+              Please refresh the page and try connecting your wallet again.
+            </Text>
+          ) : (
+            <>
+              <LoginButton />
+              <Text fontSize="sm" color="gray.500" textAlign="center">
+                Try logging in again
+              </Text>
+            </>
+          )}
         </VStack>
       </Box>
     );
@@ -106,6 +127,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // If not authenticated (and we've finished initial loading), show login page
   if (!isAuthenticated) {
+    // Show Privy wallet login page
+    if (authMethod === 'privy') {
+      return <WalletLoginPage />;
+    }
+
+    // Show Logto login page (existing)
     return (
       <Box
         minH="100vh"

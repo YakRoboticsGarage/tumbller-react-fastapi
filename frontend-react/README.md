@@ -8,7 +8,10 @@ A React web application for controlling Tumbller robots that run on ESP32S3 (mot
 - **Motor Controls**: Four-directional movement controls (Forward, Back, Left, Right)
 - **Live Camera Stream**: Real-time video feed from ESP-CAM
 - **Persistent Storage**: Robot configurations saved in browser local storage
-- **Optional Authentication**: Logto integration (enable when needed)
+- **Wallet Authentication**: Privy-based wallet login (MetaMask, Coinbase, WalletConnect)
+- **x402 Payments**: Pay-per-session robot access via HTTP 402 protocol
+- **Session Management**: Time-limited sessions with countdown timer and transaction tracking
+- **Alternative Auth**: Optional Logto integration for email/social login
 - **Modern UI**: Built with Chakra UI for a clean, responsive interface
 
 ## Tech Stack
@@ -20,6 +23,9 @@ A React web application for controlling Tumbller robots that run on ESP32S3 (mot
 - Zustand (client state with persistence)
 - React Hook Form + Zod (form validation)
 - React Router (routing)
+- Privy SDK (wallet authentication)
+- ethers.js v6 (blockchain interactions)
+- x402 (HTTP 402 payment protocol)
 
 ## Getting Started
 
@@ -66,18 +72,58 @@ You can optionally configure a default robot that will be loaded automatically o
 
 ### Optional: Enable Authentication
 
-By default, the app runs without authentication. To enable Logto:
+By default, the app runs without authentication. Two authentication methods are supported:
+
+#### Option A: Privy (Wallet-Based Login)
+
+Connect with MetaMask, Coinbase Wallet, or WalletConnect:
+
+1. Get an App ID from [dashboard.privy.io](https://dashboard.privy.io)
+2. Update `.env`:
+   ```env
+   VITE_ENABLE_AUTH=true
+   VITE_AUTH_METHOD=privy
+   VITE_PRIVY_APP_ID=your-privy-app-id
+   ```
+3. Restart the dev server
+
+**Note**: Users must have an existing Web3 wallet. No embedded wallets are created.
+
+See [docs/Privy_Authentication_Guide.md](docs/Privy_Authentication_Guide.md) for detailed setup.
+
+#### Option B: Logto (Email/Social Login)
+
+Traditional authentication via email, Google, GitHub, etc.:
 
 1. Set up a Logto application (see [Logto Integration Guide](docs/Logto_Integration_Guide.md))
 2. Update `.env`:
    ```env
    VITE_ENABLE_AUTH=true
+   VITE_AUTH_METHOD=logto
    VITE_LOGTO_ENDPOINT=https://your-tenant.logto.app
    VITE_LOGTO_APP_ID=your-app-id
    ```
 3. Restart the dev server
 
 See [docs/Logto_Integration_Guide.md](docs/Logto_Integration_Guide.md) for detailed setup.
+
+### x402 Payments Configuration
+
+When using Privy authentication, the app supports x402 pay-per-session payments:
+
+1. Configure the x402 network in `.env`:
+   ```env
+   VITE_X402_NETWORK=base-sepolia    # or 'base' for mainnet
+   ```
+
+2. The payment flow:
+   - User connects wallet via Privy
+   - User clicks "Purchase Access" to buy a robot session
+   - Payment is made via x402 protocol (USDC on Base)
+   - Session timer starts with countdown display
+   - Transaction hash is shown with block explorer link
+
+**Note**: Transaction hashes are persisted in localStorage and restored after logout/login.
 
 ### Other Commands
 
@@ -184,15 +230,37 @@ The camera feed is created by:
 
 ```
 src/
+├── assets/
+│   └── yclogo.jpeg               # Yak Robotics logo
 ├── components/
+│   ├── common/
+│   │   ├── SessionStatus.tsx     # Session timer and tx info display
+│   │   ├── ProtectedRoute.tsx    # Auth-protected route wrapper
+│   │   ├── UserProfile.tsx       # User/wallet info display
+│   │   └── LogoutButton.tsx      # Unified logout button
 │   └── features/
 │       ├── AddRobotForm.tsx      # Form to add new robots
 │       ├── CameraStream.tsx      # Camera stream display
 │       └── MotorControls.tsx     # Movement control buttons
+├── config/
+│   ├── privy.ts                  # Privy SDK configuration
+│   └── chains.ts                 # Blockchain network config
+├── hooks/
+│   ├── useAuth.ts                # Unified auth interface
+│   ├── usePrivyAuth.ts           # Privy-specific auth hook
+│   ├── useWallet.ts              # Wallet connection hook
+│   └── useSession.ts             # Session state hook
 ├── pages/
-│   └── RobotControlPage.tsx      # Main control page
+│   ├── RobotControlPage.tsx      # Main control page
+│   └── WalletLoginPage.tsx       # Privy wallet login page
+├── providers/
+│   ├── AuthProvider.tsx          # Auth method toggle (Privy/Logto)
+│   ├── PrivyAuthProvider.tsx     # Privy SDK provider
+│   ├── SessionProvider.tsx       # Session state management
+│   └── WalletProvider.tsx        # Wallet context provider
 ├── services/
-│   └── robotApi.ts               # Robot API client
+│   ├── robotApi.ts               # Robot API client
+│   └── accessApi.ts              # Session/access API client
 ├── stores/
 │   └── robotStore.ts             # Zustand store for robot state
 ├── theme/
@@ -200,7 +268,7 @@ src/
 ├── types/
 │   └── robot.ts                  # TypeScript interfaces
 ├── App.tsx                       # Root component
-└── main.tsx                      # Entry point
+└── main.tsx                      # Entry point with providers
 ```
 
 ## Development

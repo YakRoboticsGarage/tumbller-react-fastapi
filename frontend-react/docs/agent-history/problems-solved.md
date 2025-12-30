@@ -11,6 +11,7 @@
 - [React Hooks & Context](#react-hooks--context)
 - [Wallet & Payment Integration](#wallet--payment-integration)
 - [Privy Wallet Integration](#privy-wallet-integration)
+- [Privy Authentication](#privy-authentication)
 - [UI & Component Rendering](#ui--component-rendering)
 - [API & Backend Communication](#api--backend-communication)
 - [Performance](#performance)
@@ -352,6 +353,153 @@ function formatUsdc(amount: string): string {
 - Document decimal handling in API types
 
 **Related Files**: `src/components/features/RobotPayoutButton.tsx`
+
+---
+
+## Privy Authentication
+
+### Provider Order Breaks Privy Wallet Access
+
+**Date**: 2025-12-30
+
+**Symptoms**:
+"Wallet not connected" error when trying to purchase robot access, even though user is logged in with Privy.
+
+**Root Cause**:
+`SessionProvider` uses `useWallet()` which needs to access Privy's wallet. But `SessionProvider` was wrapping `AuthProvider` (which contains `PrivyProvider`), so Privy wasn't initialized when `useWallet()` was called.
+
+```tsx
+// Wrong order - SessionProvider can't see Privy wallet
+<WalletProvider>
+  <SessionProvider>        // useWallet() called here
+    <AuthProvider>         // PrivyProvider initialized here - too late!
+      <App />
+    </AuthProvider>
+  </SessionProvider>
+</WalletProvider>
+```
+
+**Solution**:
+Reorder providers so AuthProvider wraps SessionProvider:
+
+```tsx
+// Correct order - Privy initialized before SessionProvider
+<WalletProvider>
+  <AuthProvider>           // PrivyProvider initialized first
+    <SessionProvider>      // useWallet() now sees Privy wallet
+      <App />
+    </SessionProvider>
+  </AuthProvider>
+</WalletProvider>
+```
+
+**Prevention**:
+- Provider order matters - dependencies must be initialized first
+- If hook A uses context from provider B, provider B must be an ancestor of where A is used
+- Document provider dependencies in comments
+
+**Related Files**: `src/main.tsx`
+
+---
+
+### Privy getSigner Returns Null
+
+**Date**: 2025-12-30
+
+**Symptoms**:
+Payment fails with "Wallet not connected" even though Privy shows user as authenticated with a connected wallet.
+
+**Root Cause**:
+Used wrong Privy SDK method. `getEthersProvider()` doesn't exist on Privy's `ConnectedWallet` type - the correct method is `getEthereumProvider()`.
+
+```typescript
+// Wrong - method doesn't exist
+const provider = await connectedWallet.getEthersProvider();
+
+// Correct - returns EIP-1193 provider
+const eip1193Provider = await connectedWallet.getEthereumProvider();
+```
+
+**Solution**:
+Use `getEthereumProvider()` and wrap with ethers `BrowserProvider`:
+
+```typescript
+const getSigner = useCallback(async (): Promise<Signer | null> => {
+  if (!connectedWallet) return null;
+
+  // Get EIP-1193 provider from Privy wallet
+  const eip1193Provider = await connectedWallet.getEthereumProvider();
+
+  // Wrap in BrowserProvider for ethers v6 compatibility
+  const browserProvider = new BrowserProvider(eip1193Provider);
+  return await browserProvider.getSigner();
+}, [connectedWallet]);
+```
+
+**Prevention**:
+- Check SDK types/docs for correct method names
+- Privy uses EIP-1193 providers, not ethers providers directly
+- ethers v6 uses `BrowserProvider`, not `Web3Provider`
+
+**Related Files**: `src/hooks/useWallet.ts`
+
+---
+
+### Payment Transaction Hash Lost After Logout
+
+**Date**: 2025-12-30
+
+**Symptoms**:
+After purchasing access, UI shows transaction link. After logout and login, UI shows "Free Session" instead.
+
+**Root Cause**:
+x402 middleware settles payments AFTER the endpoint handler returns. The transaction hash is only available in the `X-PAYMENT-RESPONSE` header on the response - the backend endpoint never sees it.
+
+Flow:
+1. Client sends request with `X-PAYMENT` header
+2. x402 middleware verifies payment
+3. Endpoint handler runs, returns response (no tx hash yet!)
+4. x402 middleware settles payment with facilitator
+5. x402 middleware adds `X-PAYMENT-RESPONSE` header with tx hash
+6. Response sent to client
+
+**Solution**:
+Store tx hash in localStorage on the frontend:
+
+```typescript
+// src/providers/SessionProvider.tsx
+const PAYMENT_TX_STORAGE_KEY = 'tumbller_payment_tx';
+
+// On purchase success - save to localStorage
+const setSessionDirectly = useCallback((session, txHash) => {
+  if (txHash) {
+    setPaymentTx(txHash);
+    localStorage.setItem(PAYMENT_TX_STORAGE_KEY, JSON.stringify({
+      txHash,
+      walletAddress: address?.toLowerCase(),
+      timestamp: Date.now(),
+    }));
+  }
+}, [address]);
+
+// On session refresh (after login) - restore from localStorage
+if (status.active) {
+  const stored = localStorage.getItem(PAYMENT_TX_STORAGE_KEY);
+  if (stored) {
+    const { txHash, walletAddress } = JSON.parse(stored);
+    if (walletAddress === address.toLowerCase()) {
+      setPaymentTx(txHash);
+    }
+  }
+}
+```
+
+**Prevention**:
+- Understand middleware execution order - x402 settles AFTER handler
+- For data only available in response headers, persist on frontend
+- Always check if backend can actually access the data you need
+
+**Related Files**: `src/providers/SessionProvider.tsx`
 
 ---
 
