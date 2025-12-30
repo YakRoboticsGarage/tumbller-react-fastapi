@@ -85,8 +85,8 @@ export function RobotWalletDisplay({
     ? walletAddress
     : `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
 
-  const fontSize = size === 'sm' ? 'sm' : 'md'
-  const iconSize = size === 'sm' ? 'xs' : 'sm'
+  const fontSize = size === 'sm' ? 'md' : 'lg'
+  const iconSize = size === 'sm' ? 'sm' : 'md'
 
   if (isEditing) {
     return (
@@ -167,7 +167,7 @@ export function RobotWalletDisplay({
       )}
       <Badge
         colorScheme={walletSource === 'privy_created' ? 'purple' : 'blue'}
-        fontSize="xs"
+        fontSize="sm"
       >
         {walletSource === 'privy_created' ? 'Privy' : 'User'}
       </Badge>

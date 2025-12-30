@@ -136,20 +136,20 @@ export function RobotPayoutButton({ robotId, robotName, ownerWallet }: RobotPayo
       <HStack spacing={2}>
         {/* Balance Display - both USDC and ETH */}
         {isLoadingBalance ? (
-          <Spinner size="xs" />
+          <Spinner size="sm" />
         ) : balance ? (
-          <HStack spacing={1}>
-            <Badge colorScheme="green" fontSize="xs" px={2} py={1}>
+          <HStack spacing={2}>
+            <Badge colorScheme="green" fontSize="sm" px={3} py={1}>
               ${balance.usdc_balance} USDC
             </Badge>
-            <Badge colorScheme="blue" fontSize="xs" px={2} py={1}>
+            <Badge colorScheme="blue" fontSize="sm" px={3} py={1}>
               {balance.eth_balance} ETH
             </Badge>
             <Tooltip label="Refresh balance">
               <IconButton
                 aria-label="Refresh balance"
                 icon={<RepeatIcon />}
-                size="xs"
+                size="sm"
                 variant="ghost"
                 onClick={() => {
                   void fetchBalance()
