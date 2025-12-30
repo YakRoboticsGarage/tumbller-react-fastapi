@@ -67,7 +67,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
               Authentication Error
             </Text>
             <Text fontSize="md" color="gray.600" textAlign="center">
-              {typeof error === 'string' ? error : error?.message || 'An error occurred during authentication'}
+              {typeof error === 'string' ? error : error.message || 'An error occurred during authentication'}
             </Text>
           </VStack>
 

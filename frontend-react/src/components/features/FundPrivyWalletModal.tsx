@@ -176,7 +176,7 @@ export function FundPrivyWalletModal({
                   step="0.0001"
                   min="0"
                   value={ethAmount}
-                  onChange={(e) => setEthAmount(e.target.value)}
+                  onChange={(e) => { setEthAmount(e.target.value) }}
                   placeholder="0.001"
                   isDisabled={isSending}
                 />

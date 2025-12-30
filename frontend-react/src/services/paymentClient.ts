@@ -8,8 +8,8 @@ import { wrapFetchWithPayment, x402Client, decodePaymentResponseHeader } from '@
 import { ExactEvmSchemeV1 } from '@x402/evm/v1';
 import type { PurchaseResult, SessionStatus } from './accessApi';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const X402_NETWORK = import.meta.env.VITE_X402_NETWORK || 'base-sepolia';
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000';
+const X402_NETWORK = (import.meta.env.VITE_X402_NETWORK as string | undefined) ?? 'base-sepolia';
 
 /**
  * Adapter to convert ethers.js Signer to x402 ClientEvmSigner

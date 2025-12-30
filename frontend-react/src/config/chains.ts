@@ -33,7 +33,7 @@ export const CHAINS = {
 
 // Network is configured via VITE_X402_NETWORK env var
 // Options: "base-sepolia" (testnet) or "base" (mainnet)
-const networkEnv = import.meta.env.VITE_X402_NETWORK || 'base-sepolia';
+const networkEnv = (import.meta.env.VITE_X402_NETWORK as string | undefined) ?? 'base-sepolia';
 
 export const DEFAULT_CHAIN: ChainConfig =
   networkEnv === 'base' ? CHAINS.baseMainnet : CHAINS.baseSepolia;

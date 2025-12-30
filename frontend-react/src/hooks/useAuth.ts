@@ -7,7 +7,8 @@ import { useMemo } from 'react';
  * - Returns mock authenticated data when auth is disabled
  */
 export function useAuth() {
-  const isAuthEnabled = String(import.meta.env.VITE_ENABLE_AUTH) === 'true';
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Will be replaced with Privy auth
+  const isAuthEnabled = (import.meta.env.VITE_ENABLE_AUTH as string) === 'true';
 
   // Memoize mock data to prevent re-renders
   const mockAuth = useMemo(() => ({
@@ -48,5 +49,5 @@ export function useAuth() {
  * Check if authentication is enabled in the app
  */
 export function useAuthEnabled() {
-  return String(import.meta.env.VITE_ENABLE_AUTH) === 'true';
+  return import.meta.env.VITE_ENABLE_AUTH === 'true';
 }

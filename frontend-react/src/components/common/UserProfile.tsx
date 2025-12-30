@@ -19,9 +19,9 @@ export function UserProfile() {
             setUserInfo(info as Record<string, unknown>);
           }
         })
-        .catch((err) => {
+        .catch((err: unknown) => {
           console.error('[UserProfile] Failed to fetch user info:', err);
-          setError(err);
+          setError(err instanceof Error ? err : new Error(String(err)));
           // Don't retry on error - just hide the profile
         });
     }

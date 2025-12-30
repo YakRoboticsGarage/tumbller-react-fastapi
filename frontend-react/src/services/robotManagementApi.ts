@@ -227,8 +227,8 @@ class RobotManagementApi {
    * Get gas funding information for reference
    * Returns current ETH price for USD conversion display
    */
-  async getGasFundingInfo(usdAmount: number = 1.0): Promise<GasFundingInfoResponse> {
-    const response = await fetch(`${this.baseUrl}/gas-funding-info?usd_amount=${usdAmount}`);
+  async getGasFundingInfo(usdAmount = 1.0): Promise<GasFundingInfoResponse> {
+    const response = await fetch(`${this.baseUrl}/gas-funding-info?usd_amount=${String(usdAmount)}`);
     return this.handleResponse<GasFundingInfoResponse>(response);
   }
 }

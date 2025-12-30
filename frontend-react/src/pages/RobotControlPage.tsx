@@ -189,7 +189,7 @@ export function RobotControlPage() {
                             size="sm"
                             variant="ghost"
                             rightIcon={showRobotDetails ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                            onClick={() => setShowRobotDetails(!showRobotDetails)}
+                            onClick={() => { setShowRobotDetails(!showRobotDetails) }}
                           >
                             {showRobotDetails ? 'Hide' : 'Robot'} Details
                           </Button>
@@ -198,7 +198,7 @@ export function RobotControlPage() {
                             variant="ghost"
                             colorScheme="green"
                             rightIcon={showWalletInfo ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                            onClick={() => setShowWalletInfo(!showWalletInfo)}
+                            onClick={() => { setShowWalletInfo(!showWalletInfo) }}
                           >
                             {showWalletInfo ? 'Hide' : 'Wallet'} Info
                           </Button>
@@ -253,26 +253,28 @@ export function RobotControlPage() {
                                 size="xs"
                                 colorScheme="purple"
                                 variant="outline"
-                                onClick={async () => {
-                                  try {
-                                    // Switch/create the Privy wallet
-                                    await switchWallet(activeRobot.config.id, 'privy_created')
-                                    // Get the updated robot to find the new privy wallet address
-                                    const updatedRobot = useRobotStore.getState().robots.get(activeRobot.config.id)
-                                    if (updatedRobot?.config.privyWalletAddress) {
-                                      // Open funding modal
-                                      setPendingPrivyWallet(updatedRobot.config.privyWalletAddress)
-                                      onFundingOpen()
+                                onClick={() => {
+                                  void (async () => {
+                                    try {
+                                      // Switch/create the Privy wallet
+                                      await switchWallet(activeRobot.config.id, 'privy_created')
+                                      // Get the updated robot to find the new privy wallet address
+                                      const updatedRobot = useRobotStore.getState().robots.get(activeRobot.config.id)
+                                      if (updatedRobot?.config.privyWalletAddress) {
+                                        // Open funding modal
+                                        setPendingPrivyWallet(updatedRobot.config.privyWalletAddress)
+                                        onFundingOpen()
+                                      }
+                                    } catch (err) {
+                                      toast({
+                                        title: 'Failed to create Privy wallet',
+                                        description: err instanceof Error ? err.message : 'Unknown error',
+                                        status: 'error',
+                                        duration: 5000,
+                                        isClosable: true,
+                                      })
                                     }
-                                  } catch (err) {
-                                    toast({
-                                      title: 'Failed to create Privy wallet',
-                                      description: err instanceof Error ? err.message : 'Unknown error',
-                                      status: 'error',
-                                      duration: 5000,
-                                      isClosable: true,
-                                    })
-                                  }
+                                  })()
                                 }}
                               >
                                 {activeRobot.config.privyWalletAddress ? 'Switch to Privy Wallet' : 'Create Privy Wallet'}

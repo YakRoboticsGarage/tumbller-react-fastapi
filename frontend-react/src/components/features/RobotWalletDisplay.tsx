@@ -15,7 +15,7 @@ import type { WalletSource } from '../../types'
 interface RobotWalletDisplayProps {
   walletAddress: string
   walletSource: WalletSource
-  robotId?: string
+  robotId?: string  // Reserved for future use
   showFullAddress?: boolean
   size?: 'sm' | 'md'
   onWalletUpdate?: (newAddress: string) => Promise<void>
@@ -24,11 +24,12 @@ interface RobotWalletDisplayProps {
 export function RobotWalletDisplay({
   walletAddress,
   walletSource,
-  robotId,
+  robotId: _robotId,
   showFullAddress = false,
   size = 'sm',
   onWalletUpdate,
 }: RobotWalletDisplayProps) {
+  void _robotId // Reserved for future use
   const { hasCopied, onCopy } = useClipboard(walletAddress)
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(walletAddress)
@@ -98,7 +99,7 @@ export function RobotWalletDisplay({
           size="sm"
           fontFamily="mono"
           value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
+          onChange={(e) => { setEditValue(e.target.value) }}
           placeholder="0x..."
           width="auto"
           flex={1}
@@ -161,7 +162,7 @@ export function RobotWalletDisplay({
             icon={<EditIcon />}
             size={iconSize}
             variant="ghost"
-            onClick={() => setIsEditing(true)}
+            onClick={() => { setIsEditing(true) }}
           />
         </Tooltip>
       )}

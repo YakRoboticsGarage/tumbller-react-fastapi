@@ -235,7 +235,7 @@ export const useRobotStore = create<RobotStore>()(
         // Filter out any robots missing required wallet fields (from old localStorage data)
         const robots = new Map(
           (persisted.robots || [])
-            .filter(([, robot]) => robot.config?.walletAddress && robot.config?.walletSource)
+            .filter(([, robot]) => Boolean(robot.config.walletAddress) && Boolean(robot.config.walletSource))
             .map(([id, robot]) => [
               id,
               { ...robot, connectionStatus: 'disconnected' as const, cameraStatus: 'disconnected' as const }

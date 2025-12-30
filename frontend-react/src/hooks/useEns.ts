@@ -45,7 +45,7 @@ export function useEnsName(address: string | null): {
         ensCache.set(address.toLowerCase(), name);
         setEnsName(name);
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         console.warn('[ENS] Failed to lookup address:', error);
         ensCache.set(address.toLowerCase(), null);
         setEnsName(null);
@@ -96,7 +96,7 @@ export function useEnsAddress(ensName: string | null): {
           setError(`No address configured for ${ensName}`);
         }
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.warn('[ENS] Failed to resolve name:', err);
         addressCache.set(ensName.toLowerCase(), null);
         setAddress(null);

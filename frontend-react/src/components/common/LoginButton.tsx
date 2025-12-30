@@ -2,6 +2,7 @@ import { Button } from '@chakra-ui/react';
 import { useAuth, useAuthEnabled } from '../../hooks/useAuth';
 
 export function LoginButton() {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- Will be replaced with Privy auth
   const { signIn, isLoading } = useAuth();
   const isAuthEnabled = useAuthEnabled();
 
@@ -11,7 +12,7 @@ export function LoginButton() {
   }
 
   const handleSignIn = () => {
-    void signIn(window.location.origin + '/callback');
+    void signIn({ redirectUri: window.location.origin + '/callback' });
   };
 
   return (

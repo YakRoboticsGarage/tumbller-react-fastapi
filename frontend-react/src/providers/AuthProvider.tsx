@@ -5,24 +5,69 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Get configuration values at module level to avoid conditional hook issues
+const isAuthEnabled = (import.meta.env.VITE_ENABLE_AUTH as string | undefined) === 'true';
+const endpoint = ((import.meta.env.VITE_LOGTO_ENDPOINT as string | undefined) ?? '').replace(/\/$/, '');
+const appId = (import.meta.env.VITE_LOGTO_APP_ID as string | undefined) ?? '';
+
+/**
+ * Inner component that uses hooks unconditionally
+ * Only rendered when auth is enabled and config is valid
+ */
+function LogtoAuthProvider({ children }: AuthProviderProps) {
+  const config: LogtoConfig = useMemo(() => ({
+    endpoint,
+    appId,
+    scopes: [
+      UserScope.Email,
+      UserScope.Phone,
+      UserScope.CustomData,
+      UserScope.Identities,
+    ],
+  }), []);
+
+  useEffect(() => {
+    console.log('[AuthProvider] Logto initialized:', {
+      endpoint,
+      appId: appId ? `${appId.substring(0, 8)}...` : 'missing',
+    });
+  }, []);
+
+  try {
+    return (
+      <LogtoProvider config={config}>
+        {children}
+      </LogtoProvider>
+    );
+  } catch (error) {
+    console.error('[AuthProvider] Error initializing Logto:', error);
+    return (
+      <div style={{
+        padding: '2rem',
+        textAlign: 'center',
+        color: '#e53e3e'
+      }}>
+        <h1>Authentication Initialization Error</h1>
+        <p>Failed to initialize Logto SDK.</p>
+        <p>Error: {error instanceof Error ? error.message : String(error)}</p>
+      </div>
+    );
+  }
+}
+
 /**
  * Conditional LogtoProvider wrapper
  * - If VITE_ENABLE_AUTH is 'true', wraps children with LogtoProvider
  * - Otherwise, renders children directly without authentication
  */
 export function AuthProvider({ children }: AuthProviderProps) {
-  const isAuthEnabled = String(import.meta.env.VITE_ENABLE_AUTH) === 'true';
-  // Remove trailing slash from endpoint
-  const endpoint = String(import.meta.env.VITE_LOGTO_ENDPOINT ?? '').replace(/\/$/, '');
-  const appId = String(import.meta.env.VITE_LOGTO_APP_ID ?? '');
-
   useEffect(() => {
     console.log('[AuthProvider] Configuration:', {
       isAuthEnabled,
       endpoint,
       appId: appId ? `${appId.substring(0, 8)}...` : 'missing',
     });
-  }, [isAuthEnabled, endpoint, appId]);
+  }, []);
 
   // If authentication is disabled, render children directly
   if (!isAuthEnabled) {
@@ -49,36 +94,5 @@ export function AuthProvider({ children }: AuthProviderProps) {
     );
   }
 
-  // Memoize the config to prevent recreating on every render
-  const config: LogtoConfig = useMemo(() => ({
-    endpoint,
-    appId,
-    scopes: [
-      UserScope.Email,
-      UserScope.Phone,
-      UserScope.CustomData,
-      UserScope.Identities,
-    ],
-  }), [endpoint, appId]);
-
-  try {
-    return (
-      <LogtoProvider config={config}>
-        {children}
-      </LogtoProvider>
-    );
-  } catch (error) {
-    console.error('[AuthProvider] Error initializing Logto:', error);
-    return (
-      <div style={{
-        padding: '2rem',
-        textAlign: 'center',
-        color: '#e53e3e'
-      }}>
-        <h1>Authentication Initialization Error</h1>
-        <p>Failed to initialize Logto SDK.</p>
-        <p>Error: {error instanceof Error ? error.message : String(error)}</p>
-      </div>
-    );
-  }
+  return <LogtoAuthProvider>{children}</LogtoAuthProvider>;
 }
