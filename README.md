@@ -1,10 +1,10 @@
 # Tumbller Robot Control
 
-A full-stack web application for controlling Tumbller robots with x402 cryptocurrency payment integration.
+A full-stack web application for controlling Tumbller robots with x402 cryptocurrency payment integration and Privy wallet management.
 
 ## Overview
 
-Control ESP32-based Tumbller robots through a web interface with session-based access and USDC payments on Base network.
+Control ESP32-based Tumbller robots through a web interface with session-based access and USDC payments on Base network. Supports both user-provided wallets and Privy-managed embedded wallets for seamless robot earnings collection.
 
 **Features:**
 - Motor controls (forward, back, left, right) via ESP32S3
@@ -12,21 +12,36 @@ Control ESP32-based Tumbller robots through a web interface with session-based a
 - x402 payment integration (USDC on Base Sepolia/Mainnet)
 - Wallet connection (Coinbase Wallet, MetaMask)
 - Session-based access control with countdown timer
-- Multi-robot support
+- Multi-robot support with persistent storage
+- **Privy wallet integration** for robot earnings management
+- **Dual wallet support** - switch between user-provided and Privy-created wallets
+- **USDC earnings collection** - transfer robot earnings to owner wallet
+- **ENS/Base name resolution** for owner wallet addresses
 
 ## Architecture
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │  React Frontend │────▶│  FastAPI Backend│────▶│  ESP32 Robots   │
-│  (Vite + Chakra)│     │  (x402 + Proxy) │     │  (Motor + Cam)  │
+│  (Vite + Chakra)│     │  (SQLAlchemy)   │     │  (Motor + Cam)  │
+│                 │     │                 │     │                 │
+│  • Zustand      │     │  • Robot CRUD   │     │  • HTTP REST    │
+│  • React Query  │     │  • x402 Proxy   │     │  • MJPEG Stream │
+│  • ethers.js    │     │  • Privy API    │     │                 │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
          │                       │
-         │                       ▼
-         │              ┌─────────────────┐
-         └─────────────▶│ x402 Facilitator│
-                        │ (Coinbase)      │
-                        └─────────────────┘
+         │                       ├──────────────────┐
+         │                       ▼                  ▼
+         │              ┌─────────────────┐ ┌─────────────────┐
+         └─────────────▶│ x402 Facilitator│ │   Privy API     │
+                        │ (Coinbase)      │ │ (Wallet Mgmt)   │
+                        └─────────────────┘ └─────────────────┘
+                                 │                  │
+                                 ▼                  ▼
+                        ┌───────────────────────────────────┐
+                        │        Base Network (L2)          │
+                        │   USDC Payments + Robot Wallets   │
+                        └───────────────────────────────────┘
 ```
 
 ## Quick Start
@@ -100,6 +115,16 @@ SESSION_DURATION_MINUTES=10       # Access duration per payment
 SESSION_PRICE=$0.10               # Price in USDC
 ```
 
+### Privy Wallet Settings (Backend)
+
+For Privy-managed robot wallets:
+
+```bash
+# backend-fastapi/.env
+PRIVY_APP_ID=your-app-id          # From Privy dashboard
+PRIVY_APP_SECRET=your-app-secret  # From Privy dashboard
+```
+
 ### Free Access Mode
 
 For development without payments:
@@ -112,9 +137,18 @@ PAYMENT_ENABLED=false
 ## Usage
 
 1. **Connect Wallet** - Click "Connect Wallet" (Coinbase Wallet prioritized)
-2. **Add Robot** - Enter robot name and ESP32 IP addresses
+2. **Add Robot** - Enter robot name, ESP32 IP addresses, and optionally a wallet address
 3. **Get Access** - Pay with USDC to start a session
 4. **Control Robot** - Use motor controls and camera stream
+5. **Collect Earnings** - Transfer USDC from robot wallet to your owner wallet
+
+### Wallet Management
+
+Robots can receive payments to either:
+- **User-provided wallet** - Your existing wallet address
+- **Privy wallet** - Auto-created embedded wallet managed by Privy
+
+You can switch between wallet types in the Robot Details panel. Privy wallets require ETH for gas fees to transfer USDC earnings.
 
 ## Tech Stack
 
@@ -122,14 +156,20 @@ PAYMENT_ENABLED=false
 - React 18 + TypeScript
 - Vite 6
 - Chakra UI v2
+- Zustand (state management)
+- React Query (server state)
 - ethers.js v6
 - @x402/fetch, @x402/evm
+- Vitest + React Testing Library
 
 **Backend:**
 - Python 3.11+
 - FastAPI
+- SQLAlchemy 2.0 + Alembic (database)
 - x402-python
 - httpx (async HTTP)
+- Privy Server SDK (wallet management)
+- pytest (testing)
 
 ## Project Structure
 
@@ -139,15 +179,24 @@ PAYMENT_ENABLED=false
 │   │   ├── components/      # UI components
 │   │   ├── providers/       # Context providers (Wallet, Session)
 │   │   ├── services/        # API clients
-│   │   └── stores/          # Zustand stores
+│   │   ├── stores/          # Zustand stores
+│   │   └── test/            # Test utilities and mocks
 │   └── docs/                # Frontend documentation
 │
 ├── backend-fastapi/         # FastAPI backend
 │   ├── app/
 │   │   ├── api/             # Route handlers
 │   │   ├── core/            # Config, middleware
-│   │   └── services/        # Business logic
+│   │   ├── models/          # SQLAlchemy ORM models
+│   │   ├── schemas/         # Pydantic schemas
+│   │   └── services/        # Business logic (Privy, robot wallet)
+│   ├── alembic/             # Database migrations
+│   ├── tests/               # pytest test suite
 │   └── docs/                # Backend documentation
+│
+├── .github/workflows/       # GitHub Actions CI
+│   ├── backend-tests.yml    # Backend pytest workflow
+│   └── frontend-tests.yml   # Frontend vitest workflow
 │
 └── README.md                # This file
 ```
@@ -167,13 +216,24 @@ PAYMENT_ENABLED=false
 # Frontend (in frontend-react/)
 pnpm dev                    # Start dev server
 pnpm build                  # Production build
+pnpm test                   # Run tests with Vitest
 pnpm check                  # Lint + typecheck + test
 
 # Backend (in backend-fastapi/)
 uv run uvicorn app.main:app --reload    # Start dev server
 uv run pytest                            # Run tests
 uv run ruff check . --fix               # Lint
+uv run alembic upgrade head             # Apply database migrations
 ```
+
+## CI/CD
+
+GitHub Actions automatically runs on push/PR:
+- **Backend tests** - pytest with SQLite in-memory database
+- **Frontend tests** - Vitest with React Testing Library
+
+[![Backend Tests](https://github.com/YakRoboticsGarage/tumbller-react-fastapi/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/YakRoboticsGarage/tumbller-react-fastapi/actions/workflows/backend-tests.yml)
+[![Frontend Tests](https://github.com/YakRoboticsGarage/tumbller-react-fastapi/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/YakRoboticsGarage/tumbller-react-fastapi/actions/workflows/frontend-tests.yml)
 
 ## License
 
