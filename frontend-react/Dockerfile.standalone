@@ -1,0 +1,48 @@
+# YakRover Frontend - Standalone Dockerfile
+# Build args for environment configuration at build time
+
+# ---- Build Stage ----
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Copy dependency files
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Build args for Vite environment variables
+ARG VITE_API_URL=http://localhost:8000
+ARG VITE_ENABLE_AUTH=true
+ARG VITE_AUTH_METHOD=privy
+ARG VITE_PRIVY_APP_ID
+ARG VITE_X402_NETWORK=base-sepolia
+
+# Set environment variables for build
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_ENABLE_AUTH=$VITE_ENABLE_AUTH
+ENV VITE_AUTH_METHOD=$VITE_AUTH_METHOD
+ENV VITE_PRIVY_APP_ID=$VITE_PRIVY_APP_ID
+ENV VITE_X402_NETWORK=$VITE_X402_NETWORK
+
+# Build the application
+RUN pnpm run build
+
+# ---- Serve Stage ----
+FROM caddy:2-alpine
+
+# Copy the standalone Caddyfile
+COPY Caddyfile.standalone /etc/caddy/Caddyfile
+
+# Copy the built static files from the build stage
+COPY --from=build /app/dist /usr/share/caddy
+
+# Expose HTTP and HTTPS ports
+EXPOSE 80 443

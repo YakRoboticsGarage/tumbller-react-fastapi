@@ -190,10 +190,10 @@ describe('robotStore', () => {
         cameraIp: '192.168.1.101',
       })
 
-      useRobotStore.getState().updateRobotStatus(mockRobotResponse.id, { cameraStatus: 'online' })
+      useRobotStore.getState().updateRobotStatus(mockRobotResponse.id, { cameraStatus: 'connected' })
 
       const robot = useRobotStore.getState().robots.get(mockRobotResponse.id)
-      expect(robot?.cameraStatus).toBe('online')
+      expect(robot?.cameraStatus).toBe('connected')
     })
 
     it('updates multiple status fields at once', async () => {
@@ -207,12 +207,12 @@ describe('robotStore', () => {
 
       useRobotStore.getState().updateRobotStatus(mockRobotResponse.id, {
         connectionStatus: 'online',
-        cameraStatus: 'online',
+        cameraStatus: 'connected',
       })
 
       const robot = useRobotStore.getState().robots.get(mockRobotResponse.id)
       expect(robot?.connectionStatus).toBe('online')
-      expect(robot?.cameraStatus).toBe('online')
+      expect(robot?.cameraStatus).toBe('connected')
     })
 
     it('does nothing if robot does not exist', () => {

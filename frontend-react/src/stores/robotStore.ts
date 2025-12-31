@@ -81,8 +81,9 @@ export const useRobotStore = create<RobotStore>()(
 
           // Set first robot as active if none selected
           const { activeRobotId } = get()
-          if (!activeRobotId && response.robots.length > 0) {
-            set({ activeRobotId: response.robots[0].id })
+          const firstRobot = response.robots[0]
+          if (!activeRobotId && firstRobot) {
+            set({ activeRobotId: firstRobot.id })
           }
         } catch (error) {
           set({
@@ -129,10 +130,10 @@ export const useRobotStore = create<RobotStore>()(
           newRobots.delete(robotId)
 
           // Select next robot if we deleted the active one
-          let newActiveId = state.activeRobotId
+          let newActiveId: string | null = state.activeRobotId
           if (state.activeRobotId === robotId) {
             const remaining = Array.from(newRobots.keys())
-            newActiveId = remaining.length > 0 ? remaining[0] : null
+            newActiveId = remaining[0] ?? null
           }
 
           return {

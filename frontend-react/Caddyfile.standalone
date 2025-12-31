@@ -1,0 +1,34 @@
+# YakRover Frontend Caddyfile
+#
+# Environment variables (with defaults):
+#   DOMAIN       = yakrover.com
+#   BACKEND_URL  = http://yakrover_backend:8000  (Docker container name)
+#   ADMIN_EMAIL  = admin@yakrover.com
+#
+# Deployment scenarios:
+#   Same server (Docker): BACKEND_URL=http://yakrover_backend:8000 (default)
+#   Same server (direct): BACKEND_URL=http://host.docker.internal:8000
+#   Separate servers:     BACKEND_URL=https://api.yakrover.com
+#
+# Domain examples:
+#   Production:  DOMAIN=yakrover.com
+#   Staging:     DOMAIN=yakrover.net
+#   Development: DOMAIN=yakrover.org
+
+# Global options
+{
+    email {$ADMIN_EMAIL:admin@yakrover.com}
+}
+
+{$DOMAIN:yakrover.com} {
+    # Serve static files
+    root * /usr/share/caddy
+    encode zstd gzip
+
+    # Proxy API requests to backend
+    reverse_proxy /api/* {$BACKEND_URL:http://yakrover_backend:8000}
+
+    # Serve React app for all other requests (SPA routing)
+    file_server
+    try_files {path} /index.html
+}

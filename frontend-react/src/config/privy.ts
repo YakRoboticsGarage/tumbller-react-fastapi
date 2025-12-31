@@ -21,7 +21,9 @@ export const DEFAULT_PRIVY_CHAIN = network === 'base' ? base : baseSepolia;
 export const PRIVY_CONFIG: PrivyClientConfig = {
   // Embedded wallets disabled - users must bring their own wallet
   embeddedWallets: {
-    createOnLogin: 'off',
+    ethereum: {
+      createOnLogin: 'off',
+    },
   },
 
   // Supported chains (match x402 configuration)

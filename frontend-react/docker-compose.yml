@@ -1,0 +1,35 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.standalone
+      args:
+        # Vite build-time variables
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+        VITE_ENABLE_AUTH: ${VITE_ENABLE_AUTH:-true}
+        VITE_AUTH_METHOD: ${VITE_AUTH_METHOD:-privy}
+        VITE_PRIVY_APP_ID: ${VITE_PRIVY_APP_ID:-}
+        VITE_X402_NETWORK: ${VITE_X402_NETWORK:-base-sepolia}
+    container_name: yakrover_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Caddy runtime variables
+      DOMAIN: ${DOMAIN:-yakrover.com}
+      BACKEND_URL: ${BACKEND_URL:-http://yakrover_backend:8000}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@yakrover.com}
+    volumes:
+      # Persist Caddy's TLS certificates
+      - caddy_data:/data
+    # Connect to external network to reach backend container
+    networks:
+      - yakrover_network
+
+networks:
+  yakrover_network:
+    external: true
+
+volumes:
+  caddy_data:

@@ -62,3 +62,7 @@ Thumbs.db
 
 # SQLite databases
 *.db
+
+# Log files
+logs/
+*.log

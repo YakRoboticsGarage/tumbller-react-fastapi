@@ -55,12 +55,12 @@ def create_dynamic_x402_middleware():
     settings = get_settings()
 
     async def dynamic_x402_middleware(request: Request, call_next) -> Response:
-        # Only intercept purchase endpoint
-        if request.url.path != "/api/v1/access/purchase":
+        # Skip OPTIONS (CORS preflight) for ALL endpoints
+        if request.method == "OPTIONS":
             return await call_next(request)
 
-        # Skip OPTIONS (CORS preflight)
-        if request.method == "OPTIONS":
+        # Only intercept purchase endpoint
+        if request.url.path != "/api/v1/access/purchase":
             return await call_next(request)
 
         # Get robot's wallet address

@@ -17,7 +17,7 @@ export function PrivyAuthProvider({ children }: PrivyAuthProviderProps) {
     console.log('[PrivyAuthProvider] Initialized:', {
       appId: PRIVY_APP_ID ? `${PRIVY_APP_ID.substring(0, 8)}...` : 'missing',
       defaultChain: DEFAULT_PRIVY_CHAIN.name,
-      embeddedWallets: String(PRIVY_CONFIG.embeddedWallets?.createOnLogin),
+      embeddedWallets: String(PRIVY_CONFIG.embeddedWallets?.ethereum?.createOnLogin),
     });
   }, []);
 

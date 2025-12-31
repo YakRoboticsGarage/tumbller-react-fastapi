@@ -1,15 +1,21 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import access, robot, robots
 from app.core.config import get_settings
+from app.core.logging import setup_logging
+
+# Initialize logging
+logger = setup_logging()
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
 
     app = FastAPI(
-        title="Tumbller Robot Control API",
+        title="YakRover Robot Control API",
         description="Time-based robot access with optional x402 payments",
         version="1.0.0",
     )
@@ -33,14 +39,14 @@ def create_app() -> FastAPI:
 
             dynamic_middleware = create_dynamic_x402_middleware()
             app.middleware("http")(dynamic_middleware)
-            print(
+            logger.info(
                 f"x402 payments ENABLED (dynamic per-robot wallets): {settings.session_price} "
                 f"for {settings.session_duration_minutes} min"
             )
         except ImportError as e:
-            print(f"WARNING: x402 package not installed. Payments disabled. Error: {e}")
+            logger.warning(f"x402 package not installed. Payments disabled. Error: {e}")
     else:
-        print("Payment gateway DISABLED (PAYMENT_ENABLED=false). Free access mode.")
+        logger.info("Payment gateway DISABLED (PAYMENT_ENABLED=false). Free access mode.")
 
     # Routers
     app.include_router(access.router, prefix="/api/v1/access", tags=["Access"])

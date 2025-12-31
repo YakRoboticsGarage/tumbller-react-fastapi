@@ -1,0 +1,15 @@
+yakrover.com {
+    # Recommended: Replace with your email for important certificate notices
+    email your-email@example.com
+
+    # Set this path to your site's directory.
+    root * /usr/share/caddy
+    encode zstd gzip
+
+    # Proxy API requests to the backend service
+    reverse_proxy /api/* http://backend:8000
+
+    # Serve the React app for all other requests, enabling client-side routing
+    file_server
+    try_files {path} /index.html
+}
