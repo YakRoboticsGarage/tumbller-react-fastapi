@@ -20,6 +20,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.6.0] - 2025-12-31
+
+### Added
+- **Docker Deployment**:
+  - Standalone `Dockerfile.standalone` with Node + Caddy
+  - `docker-compose.yml` for frontend orchestration
+  - `build_frontend.sh`, `start_frontend.sh`, `stop_frontend.sh` scripts
+  - `--clean` flag for stop script to remove images and volumes
+  - `Caddyfile.standalone` with environment variable support
+
+- **Environment Variable Configuration**:
+  - Build-time: `VITE_API_URL`, `VITE_PRIVY_APP_ID`, `VITE_X402_NETWORK`
+  - Runtime: `DOMAIN`, `BACKEND_URL`, `ADMIN_EMAIL`
+  - Multi-domain support (yakrover.com/net/org)
+
+### Fixed
+- **Privy SDK API Change**: `embeddedWallets.createOnLogin` → `embeddedWallets.ethereum.createOnLogin`
+- **TypeScript Null Safety**: Array access checks in robotStore
+- **Test Type Mismatch**: `cameraStatus: 'online'` → `'connected'`
+
+---
+
 ## [1.5.0] - 2025-12-30
 
 ### Added
@@ -898,6 +920,8 @@ Ideas for future versions - see [future-improvements.md](future-improvements.md)
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 1.6.0 | 2025-12-31 | Docker deployment, Privy SDK fix, multi-domain support |
+| 1.5.0 | 2025-12-30 | Privy wallet authentication, branding |
 | 1.4.0 | 2025-12-29 | Privy wallet UI, USDC collection, gas funding |
 | 1.3.0 | 2025-12-28 | ENS integration, wallet UI improvements |
 | 1.2.1 | 2024-12-28 | x402 payment flow fixes, official client packages |

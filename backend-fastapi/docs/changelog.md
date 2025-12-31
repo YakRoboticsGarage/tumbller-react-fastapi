@@ -20,6 +20,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2025-12-31
+
+### Added
+- **Docker Deployment**:
+  - Standalone `Dockerfile` for backend with uv package manager
+  - `docker-compose.yml` for backend orchestration
+  - `build_backend.sh`, `start_backend.sh`, `stop_backend.sh` scripts
+  - `--clean` flag for stop script to remove images and volumes
+  - Shared Docker network `yakrover_network` for frontend communication
+
+- **Daily Rotating Logs**:
+  - `app/core/logging.py` with `TimedRotatingFileHandler`
+  - Logs to `/app/logs/yakrover.log` with daily rotation
+  - Keeps 30 days of logs
+  - Console + file output
+
+- **Alembic Environment Variable Support**:
+  - `alembic/env.py` now reads `DATABASE_URL` from environment
+  - Ensures migrations use same database as app
+
+### Changed
+- Renamed app title from "Tumbller" to "YakRover"
+- Updated `alembic.ini` database path to `./data/robots.db`
+- Replaced `print()` statements with proper logging in `main.py`
+
+### Fixed
+- **CORS Preflight Handling**: x402 middleware now checks OPTIONS before path
+- **Database Migration Path**: Alembic and app now use same database path
+- **`.gitignore`**: Added `logs/` and `*.log` patterns
+
+---
+
 ## [1.3.0] - 2025-12-29
 
 ### Added

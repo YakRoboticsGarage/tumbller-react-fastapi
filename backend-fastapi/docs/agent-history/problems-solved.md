@@ -512,23 +512,71 @@ now = datetime.now(UTC)
 
 ## Deployment
 
-### [Problem Title]
+### Alembic Migration Creates Tables in Wrong Database
 
-**Date**: YYYY-MM-DD
+**Date**: 2025-12-31
 
 **Symptoms**:
 ```
+sqlite3.OperationalError: no such table: robots
+# Alembic reports "Will assume non-transactional DDL" but app can't find tables
 ```
 
 **Root Cause**:
+Database path mismatch between Alembic and app:
+- `alembic.ini`: `sqlalchemy.url = sqlite+aiosqlite:///./robots.db`
+- `.env`: `DATABASE_URL=sqlite+aiosqlite:///./data/robots.db`
 
+Alembic created tables in `./robots.db` but app looked in `./data/robots.db`.
 
 **Solution**:
-```bash
+1. Update `alembic.ini` to match `.env`:
+```ini
+sqlalchemy.url = sqlite+aiosqlite:///./data/robots.db
+```
+
+2. Update `alembic/env.py` to prefer environment variable:
+```python
+import os
+
+# Override sqlalchemy.url from environment variable if set
+if os.environ.get("DATABASE_URL"):
+    config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
 ```
 
 **Prevention**:
-- 
+- Always use environment variable for database URL in Alembic
+- Keep `alembic.ini` path as fallback only
+- Test migrations in Docker before deploying
+
+**Related Files**: `alembic.ini`, `alembic/env.py`
+
+---
+
+### Docker Container Can't Write Logs
+
+**Date**: 2025-12-31
+
+**Symptoms**:
+```
+Logs folder exists but is empty after container runs
+```
+
+**Root Cause**:
+Container was running old image before logging was added. Need to rebuild.
+
+**Solution**:
+```bash
+./stop_backend.sh --clean  # Remove old image
+./build_backend.sh         # Rebuild with logging
+./start_backend.sh
+```
+
+**Prevention**:
+- Always rebuild after adding new features
+- Use `--clean` flag to ensure fresh image
+
+**Related Files**: `Dockerfile`, `app/core/logging.py`
 
 ---
 

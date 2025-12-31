@@ -20,6 +20,7 @@ Daily session logs are stored in dated files. See the most recent for current co
 
 | Date | File | Summary |
 |------|------|---------|
+| 2025-12-31 | [session-2025-12-31.md](session-2025-12-31.md) | Docker deployment, Alembic fix, logging |
 | 2025-12-29 | [session-2025-12-29.md](session-2025-12-29.md) | ENS simplification with web3.py, test suite updates |
 | 2024-12-27 | (below) | Initial backend implementation |
 

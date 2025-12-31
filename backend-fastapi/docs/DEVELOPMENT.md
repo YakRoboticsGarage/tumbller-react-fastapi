@@ -1,7 +1,7 @@
-# Tumbller Robot Control API - Development Guide
+# YakRover Robot Control API - Development Guide
 
-**Version**: 1.3.0
-**Last Updated**: December 29, 2025
+**Version**: 1.4.0
+**Last Updated**: December 31, 2025
 
 ---
 
@@ -50,6 +50,14 @@ pytest (testing)
 
 ## Project Status
 
+✅ **v1.4.0 Complete** (December 31, 2025)
+- Docker deployment with standalone Dockerfile and docker-compose
+- Build/start/stop scripts for independent backend deployment
+- Daily rotating log files to `/app/logs/`
+- Alembic reads DATABASE_URL from environment
+- Fixed CORS preflight handling in x402 middleware
+- Renamed to YakRover
+
 ✅ **v1.3.0 Complete** (December 29, 2025)
 - Complete Privy wallet integration for robots
 - Dual wallet support (user-provided + Privy-created)
@@ -91,7 +99,7 @@ pytest (testing)
 
 ## For Continuing Work
 
-**Current Session Context**: [agent-history/session-2025-12-29.md](agent-history/session-2025-12-29.md)
+**Current Session Context**: [agent-history/session-2025-12-31.md](agent-history/session-2025-12-31.md)
 
 **Common Tasks**:
 - Add endpoint → [docs/dev/common-tasks.md](docs/dev/common-tasks.md)
@@ -117,7 +125,7 @@ pytest (testing)
 - `docs/dev/testing.md` - Testing guide
 
 ### Agent History (AI Session Continuity)
-- `docs/agent-history/session-2025-12-29.md` - Current session context (Privy wallet integration)
+- `docs/agent-history/session-2025-12-31.md` - Current session context (Docker deployment)
 - `docs/agent-history/problems-solved.md` - Issues and solutions
 - `docs/agent-history/prompts.md` - AI prompts that worked
 - `docs/changelog.md` - Version history

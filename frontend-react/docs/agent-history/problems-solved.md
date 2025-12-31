@@ -846,6 +846,111 @@ if (paymentResponseHeader) {
 
 ---
 
+## Deployment & Docker
+
+### Privy SDK embeddedWallets.createOnLogin Location Changed
+
+**Date**: 2025-12-31
+
+**Symptoms**:
+```
+TypeScript error or runtime error: createOnLogin not found
+Privy config not working as expected
+```
+
+**Root Cause**:
+Privy SDK v2 moved `createOnLogin` under `embeddedWallets.ethereum` namespace.
+
+**Solution**:
+```typescript
+// Before (broken)
+embeddedWallets: {
+  createOnLogin: 'off',
+},
+
+// After (correct)
+embeddedWallets: {
+  ethereum: {
+    createOnLogin: 'off',
+  },
+},
+```
+
+**Prevention**:
+- Check Privy SDK changelog when updating
+- TypeScript will catch if property doesn't exist
+
+**Related Files**: `src/config/privy.ts`, `src/providers/PrivyAuthProvider.tsx`
+
+---
+
+### Port 80 Already in Use
+
+**Date**: 2025-12-31
+
+**Symptoms**:
+```
+Error starting userland proxy: listen tcp4 0.0.0.0:80: bind: address already in use
+```
+
+**Root Cause**:
+Host Caddy service was running and using port 80.
+
+**Solution**:
+```bash
+# Check what's using port 80
+sudo lsof -i :80
+
+# Stop and disable host Caddy
+sudo systemctl stop caddy
+sudo systemctl disable caddy
+```
+
+**Prevention**:
+- Check for running services before starting Docker containers
+- Use different ports if needed: `HTTP_PORT=8080 ./start_frontend.sh`
+
+**Related Files**: `docker-compose.yml`
+
+---
+
+### Caddyfile email Directive in Wrong Location
+
+**Date**: 2025-12-31
+
+**Symptoms**:
+```
+Caddyfile:2 - Error during parsing: unrecognized directive: email
+```
+
+**Root Cause**:
+`email` directive must be in global options block `{}`, not inside site block.
+
+**Solution**:
+```caddy
+# Wrong
+yakrover.com {
+    email admin@yakrover.com  # Error!
+}
+
+# Correct
+{
+    email {$ADMIN_EMAIL:admin@yakrover.com}
+}
+
+{$DOMAIN:yakrover.com} {
+    # site config
+}
+```
+
+**Prevention**:
+- Global options (email, acme_ca, etc.) go in `{}` block at top
+- Site-specific config goes in site blocks
+
+**Related Files**: `Caddyfile.standalone`
+
+---
+
 ## How to Add Entries
 
 When you solve a problem:

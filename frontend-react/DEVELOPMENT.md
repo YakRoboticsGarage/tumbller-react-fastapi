@@ -1,7 +1,7 @@
-# Tumbller Robot Control - Development Guide
+# YakRover Robot Control - Development Guide
 
-**Version**: 1.2.1
-**Last Updated**: December 28, 2024
+**Version**: 1.6.0
+**Last Updated**: December 31, 2025
 
 ---
 
@@ -42,29 +42,41 @@ React Hook Form + Zod (forms)
 
 ## Project Status
 
+✅ **v1.6.0 Complete** (December 31, 2025)
+- Docker deployment with standalone Dockerfile and docker-compose
+- Build/start/stop scripts for independent frontend deployment
+- Caddy configuration with environment variables for multi-domain support
+- Fixed Privy SDK API change (`embeddedWallets.ethereum.createOnLogin`)
+- TypeScript null safety fixes
+
+✅ **v1.5.0 Complete** (December 30, 2025)
+- Privy wallet-based user authentication
+- Wallet-only login (no embedded wallets)
+- Yak Robotics branding with logo
+
+✅ **v1.4.0 Complete** (December 29, 2025)
+- Privy wallet UI integration
+- USDC earnings collection
+- ETH gas funding flow
+
+✅ **v1.3.0 Complete** (December 28, 2025)
+- ENS integration
+- Wallet UI improvements
+
 ✅ **v1.2.1 Complete** (December 28, 2024)
 - Fixed x402 payment flow using official `@x402/fetch` packages
 - Fixed CORS issues with 402 responses
-- Fixed transaction hash display (extracted from `X-PAYMENT-RESPONSE` header)
-- Added ethers.js → x402 signer adapter for browser wallets
 
 ✅ **v1.2.0 Complete** (December 28, 2024)
 - x402 payment integration with Base Sepolia
 - Wallet connection (MetaMask, Coinbase Wallet)
 - Session-based robot access control
-- Backend API integration (FastAPI)
-- Session countdown timer with progress bar
-- Transaction hash display with explorer link
 
 ✅ **v1.1.0 Complete** (December 26, 2024)
 - Optional Logto authentication
 
 ✅ **v1.0.0 Complete** (December 26, 2024)
-- Multi-robot management
-- Manual connection workflow
-- Motor controls
-- Camera display
-- Custom theme
+- Multi-robot management, motor controls, camera display
 
 ---
 
@@ -174,12 +186,16 @@ pnpm dev
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 1.2.1 | 2024-12-28 | x402 payment fixes, official client packages |
-| 1.2.0 | 2024-12-28 | x402 payments, wallet integration, backend API |
+| 1.6.0 | 2025-12-31 | Docker deployment, Privy SDK fix |
+| 1.5.0 | 2025-12-30 | Privy wallet authentication |
+| 1.4.0 | 2025-12-29 | Privy wallet UI, USDC collection |
+| 1.3.0 | 2025-12-28 | ENS integration |
+| 1.2.1 | 2024-12-28 | x402 payment fixes |
+| 1.2.0 | 2024-12-28 | x402 payments, wallet integration |
 | 1.1.0 | 2024-12-26 | Optional Logto authentication |
 | 1.0.0 | 2024-12-26 | Initial release with core features |
 
-See [docs/dev/changelog.md](docs/dev/changelog.md) for detailed changes.
+See [docs/changelog.md](docs/changelog.md) for detailed changes.
 
 ---
 
